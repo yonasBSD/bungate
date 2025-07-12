@@ -313,7 +313,7 @@ describe("Weighted Load Balancer E2E Tests", () => {
 
   test("should distribute requests evenly when weights are equal", async () => {
     const serverCounts: Record<string, number> = { "echo-1": 0, "echo-2": 0, "echo-3": 0 };
-    const requestCount = 15; // Use multiple of 3 for better equal distribution testing
+    const requestCount = 30; // Use multiple of 3 for better equal distribution testing
 
     // Make multiple requests to test equal weight distribution
     for (let i = 0; i < requestCount; i++) {
@@ -347,7 +347,7 @@ describe("Weighted Load Balancer E2E Tests", () => {
 
   test("should heavily favor high-weight server in extreme ratio (10:1)", async () => {
     const serverCounts: Record<string, number> = { "echo-1": 0, "echo-2": 0 };
-    const requestCount = 22; // Use multiple of 11 for better extreme ratio testing
+    const requestCount = 55; // Use multiple of 11 for better extreme ratio testing
 
     // Make multiple requests to test extreme weight distribution
     for (let i = 0; i < requestCount; i++) {
