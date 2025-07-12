@@ -15,7 +15,6 @@ import {
   type JWTAuthOptions,
   type RateLimitOptions,
   type CORSOptions,
-  type BodyParserOptions,
   type PrometheusMiddlewareOptions,
   createRateLimit,
 } from "0http-bun/lib/middleware";
@@ -62,6 +61,16 @@ export class BunGateway implements Gateway {
         collectDefaultMetrics: this.config.metrics?.collectDefaultMetrics ?? true,
       };
       this.router.use(createPrometheusMiddleware(prometheusOptions));
+    }
+
+    // Add authentication middleware if configured
+    if (config.auth) {
+      this.router.use(createJWTAuth(config.auth));
+    }
+
+    // Add body parser middleware
+    if (config.bodyParser) {
+      this.router.use(createBodyParser(config.bodyParser));
     }
 
     // Register initial routes if provided
@@ -150,16 +159,6 @@ export class BunGateway implements Gateway {
         middlewares.push(createCORS(corsOptions));
       }
 
-      // Add body parser middleware
-      if (method === "POST" || method === "PUT" || method === "PATCH") {
-        const bodyParserOptions: BodyParserOptions = {
-          json: { limit: 1024 * 1024 }, // 1MB limit
-          urlencoded: { limit: 1024 * 1024, extended: true },
-          multipart: { limit: 5 * 1024 * 1024 }, // 5MB limit for file uploads
-        };
-        middlewares.push(createBodyParser(bodyParserOptions));
-      }
-
       // Add authentication middleware if configured
       if (route.auth) {
         const jwtOptions: JWTAuthOptions = {
@@ -178,29 +177,7 @@ export class BunGateway implements Gateway {
 
       // Add rate limiting middleware if configured
       if (route.rateLimit) {
-        const rateLimitOptions: RateLimitOptions = {
-          windowMs: route.rateLimit.windowMs || 60000, // 1 minute default
-          max: route.rateLimit.max || 100, // 100 requests per window default
-          keyGenerator:
-            route.rateLimit.keyGenerator ||
-            ((req: ZeroRequest) => {
-              // Default: use IP address or user ID if authenticated
-              return req.ctx?.user?.id || this.getClientIP(req) || "anonymous";
-            }),
-          store: route.rateLimit.store || new MemoryStore(),
-          standardHeaders: route.rateLimit.standardHeaders !== false, // Default to true
-          excludePaths: route.rateLimit.excludePaths,
-          skip: route.rateLimit.skip,
-          handler: route.rateLimit.handler,
-        };
-
-        // Handle custom message option
-        if (route.rateLimit.message && !route.rateLimit.handler) {
-          rateLimitOptions.handler = () => new Response(route.rateLimit!.message, { status: 429 });
-        }
-
-        // Add rate limiting middleware
-        middlewares.push(createRateLimit(rateLimitOptions));
+        middlewares.push(createRateLimit(route.rateLimit));
       }
 
       // Create load balancer if configured

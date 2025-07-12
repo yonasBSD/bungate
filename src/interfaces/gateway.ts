@@ -1,6 +1,6 @@
 import type { Server } from "bun";
 import type { RouteConfig } from "./route.ts";
-import type { RequestHandler, ZeroRequest } from "./middleware.ts";
+import type { BodyParserOptions, JWTAuthOptions, RequestHandler, ZeroRequest } from "./middleware.ts";
 import type { ProxyOptions } from "./proxy.ts";
 import type { Logger } from "./logger.ts";
 
@@ -62,25 +62,12 @@ export interface GatewayConfig {
   /**
    * JWT Authentication configuration
    */
-  auth?: {
-    secret?: string;
-    jwksUri?: string;
-    algorithms?: string[];
-    issuer?: string;
-    audience?: string;
-    optional?: boolean;
-    excludePaths?: string[];
-  };
+  auth?: JWTAuthOptions;
 
   /**
    * Body parser configuration
    */
-  bodyParser?: {
-    json?: { limit?: string };
-    text?: { limit?: string };
-    urlencoded?: { limit?: string };
-    multipart?: { limit?: string };
-  };
+  bodyParser?: BodyParserOptions;
 
   /**
    * Logging configuration

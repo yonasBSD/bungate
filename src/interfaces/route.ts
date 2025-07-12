@@ -1,6 +1,6 @@
 import type { AfterCircuitBreakerHook, BeforeCircuitBreakerHook, CircuitBreakerOptions } from "fetch-gate";
 import type { LoadBalancerConfig } from "./load-balancer.ts";
-import type { RequestHandler, ZeroRequest } from "./middleware.ts";
+import type { JWTAuthOptions, RateLimitOptions, RequestHandler, ZeroRequest } from "./middleware.ts";
 
 export interface RouteConfig {
   /**
@@ -112,30 +112,12 @@ export interface RouteConfig {
   /**
    * JWT Authentication configuration
    */
-  auth?: {
-    secret?: string;
-    jwksUri?: string;
-    algorithms?: string[];
-    issuer?: string;
-    audience?: string;
-    optional?: boolean;
-    excludePaths?: string[];
-  };
+  auth?: JWTAuthOptions;
 
   /**
    * Rate limiting configuration (using 0http-bun's rate limiter)
    */
-  rateLimit?: {
-    windowMs?: number;
-    max?: number;
-    keyGenerator?: (req: ZeroRequest) => Promise<string> | string;
-    handler?: (req: ZeroRequest, totalHits: number, max: number, resetTime: Date) => Promise<Response> | Response;
-    store?: any; // RateLimitStore interface
-    standardHeaders?: boolean;
-    excludePaths?: string[];
-    skip?: (req: ZeroRequest) => boolean;
-    message?: string;
-  };
+  rateLimit?: RateLimitOptions;
 
   /**
    * Route metadata
