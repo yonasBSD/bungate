@@ -90,7 +90,7 @@ export interface RouteConfig {
     /**
      * Called when an error occurs
      */
-    onError?: (req: Request, error: Error) => void | Promise<void>;
+    onError?: (req: Request, error: Error) => void | Promise<void> | Promise<Response>;
 
     /** Hook called before the circuit breaker executes the request */
     beforeCircuitBreakerExecution?: BeforeCircuitBreakerHook;
