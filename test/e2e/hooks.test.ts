@@ -648,6 +648,8 @@ describe("Hooks E2E Tests", () => {
     asyncGateway.addRoute(asyncRouteConfig);
     const asyncServer = await asyncGateway.listen(asyncGatewayPort);
 
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
     try {
       const testRequestId = "test-" + Date.now();
       const response = await fetch(
