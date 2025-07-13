@@ -1,7 +1,7 @@
 /**
  * Comprehensive tests for the HTTP Load Balancer
  */
-import { test, expect, describe, beforeEach, afterEach } from "bun:test";
+import { test, expect, describe, beforeEach, afterEach, spyOn } from "bun:test";
 import { createLoadBalancer, HttpLoadBalancer } from "../../src/load-balancer/http-load-balancer.ts";
 import type { LoadBalancerConfig, LoadBalancerTarget } from "../../src/interfaces/load-balancer.ts";
 
@@ -62,6 +62,11 @@ function createMockRequestWithCookie(cookieName: string, cookieValue: string): R
 // Helper function to mock fetch safely
 function mockFetch(handler: (url: string | URL | Request, options?: any) => Promise<Response>): typeof fetch {
   return Object.assign(handler, { preconnect: () => {} }) as typeof fetch;
+}
+
+// Helper function to create a fetch spy with proper typing
+function createFetchSpy(handler: (url: string | URL | Request, options?: any) => Promise<Response>) {
+  return spyOn(globalThis, "fetch").mockImplementation(mockFetch(handler));
 }
 
 describe("HttpLoadBalancer", () => {
@@ -395,10 +400,9 @@ describe("HttpLoadBalancer", () => {
 
     test("performs actual health checks with successful responses", async () => {
       // Mock fetch for health check testing
-      const originalFetch = globalThis.fetch;
       let fetchCallCount = 0;
 
-      globalThis.fetch = mockFetch(async (url: string | URL | Request) => {
+      const fetchSpy = createFetchSpy(async (url: string | URL | Request) => {
         fetchCallCount++;
         return new Response("OK", { status: 200 });
       });
@@ -423,14 +427,11 @@ describe("HttpLoadBalancer", () => {
       expect(fetchCallCount).toBeGreaterThan(0);
 
       // Restore original fetch
-      globalThis.fetch = originalFetch;
+      fetchSpy.mockRestore();
     });
 
     test("performs health checks with expected body validation", async () => {
-      const originalFetch = globalThis.fetch;
-      let bodyCheckPassed = false;
-
-      globalThis.fetch = mockFetch(async (url: string | URL | Request) => {
+      const fetchSpy = createFetchSpy(async (url: string | URL | Request) => {
         return new Response("healthy", { status: 200 });
       });
 
@@ -455,13 +456,11 @@ describe("HttpLoadBalancer", () => {
       const targets = loadBalancer.getHealthyTargets();
       expect(targets.length).toBe(1);
 
-      globalThis.fetch = originalFetch;
+      fetchSpy.mockRestore();
     });
 
     test("handles health check failures and timeouts", async () => {
-      const originalFetch = globalThis.fetch;
-
-      globalThis.fetch = mockFetch(async (url: string | URL | Request) => {
+      const fetchSpy = createFetchSpy(async (url: string | URL | Request) => {
         // Simulate network error
         throw new Error("Network error");
       });
@@ -486,13 +485,11 @@ describe("HttpLoadBalancer", () => {
       // Health check should have marked target as unhealthy
       expect(stats.healthyTargets).toBe(0);
 
-      globalThis.fetch = originalFetch;
+      fetchSpy.mockRestore();
     });
 
     test("handles health check timeout with AbortController", async () => {
-      const originalFetch = globalThis.fetch;
-
-      globalThis.fetch = mockFetch(async (url: string | URL | Request, options: any) => {
+      const fetchSpy = createFetchSpy(async (url: string | URL | Request, options: any) => {
         // Simulate slow response that gets aborted
         return new Promise((resolve, reject) => {
           const timeoutId = setTimeout(() => {
@@ -527,14 +524,13 @@ describe("HttpLoadBalancer", () => {
       const stats = loadBalancer.getStats();
       expect(stats.healthyTargets).toBe(0); // Should be marked unhealthy due to timeout
 
-      globalThis.fetch = originalFetch;
+      fetchSpy.mockRestore();
     });
 
     test("skips health checks when disabled", async () => {
-      const originalFetch = globalThis.fetch;
       let fetchCalled = false;
 
-      globalThis.fetch = mockFetch(async () => {
+      const fetchSpy = createFetchSpy(async () => {
         fetchCalled = true;
         return new Response("OK", { status: 200 });
       });
@@ -557,7 +553,7 @@ describe("HttpLoadBalancer", () => {
 
       expect(fetchCalled).toBe(false);
 
-      globalThis.fetch = originalFetch;
+      fetchSpy.mockRestore();
     });
 
     test("prevents duplicate health check intervals", () => {

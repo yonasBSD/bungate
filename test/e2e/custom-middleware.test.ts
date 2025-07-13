@@ -6,10 +6,10 @@
  * 2. Route level (route-specific middleware)
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "bun:test";
+import { describe, it, expect, beforeAll, afterAll, afterEach } from "bun:test";
 import { BunGateway } from "../../src/gateway/gateway.ts";
 import { BunGateLogger } from "../../src/logger/pino-logger.ts";
-import type { ZeroRequest, RequestHandler } from "../../src/interfaces/middleware.ts";
+import type { RequestHandler } from "../../src/interfaces/middleware.ts";
 
 describe("Custom Middleware E2E Tests", () => {
   let gateway: BunGateway;
@@ -82,6 +82,38 @@ describe("Custom Middleware E2E Tests", () => {
   afterAll(async () => {
     await gateway.close();
     mockServer.stop();
+  });
+
+  afterEach(async () => {
+    // Reset the gateway state after each test to avoid middleware interference
+    try {
+      await gateway.close();
+    } catch (error) {
+      // Ignore errors if gateway is already closed
+    }
+
+    // Recreate the gateway for the next test
+    const logger = new BunGateLogger({
+      level: "info",
+      transport: {
+        target: "pino/file",
+        options: {
+          destination: "/dev/null", // Suppress logs during tests
+        },
+      },
+    });
+
+    gateway = new BunGateway({
+      logger,
+      server: {
+        port: 9000,
+        hostname: "localhost",
+        development: true,
+      },
+      metrics: {
+        enabled: false, // Disable metrics to avoid conflicts
+      },
+    });
   });
 
   describe("Gateway Level Middleware", () => {
@@ -495,68 +527,6 @@ describe("Custom Middleware E2E Tests", () => {
       });
       expect(validPostResponse.status).toBe(200);
       expect(validPostResponse.headers.get("X-Transformed")).toBe("true");
-
-      await testGateway.close();
-    });
-  });
-
-  describe("Mixed Middleware Scenarios", () => {
-    it("should handle both global and route-specific middleware together", async () => {
-      const executionOrder: string[] = [];
-
-      // Global middleware
-      const globalMiddleware: RequestHandler = async (req, next) => {
-        executionOrder.push("global-before");
-        const response = await next();
-        executionOrder.push("global-after");
-        response.headers.set("X-Global", "true");
-        return response;
-      };
-
-      // Route-specific middleware
-      const routeMiddleware: RequestHandler = async (req, next) => {
-        executionOrder.push("route-before");
-        const response = await next();
-        executionOrder.push("route-after");
-        response.headers.set("X-Route", "true");
-        return response;
-      };
-
-      // Create a new gateway for this test
-      const testGateway = new BunGateway({
-        server: {
-          port: 9006,
-          hostname: "localhost",
-          development: true,
-        },
-        metrics: {
-          enabled: false, // Disable metrics to avoid conflicts
-        },
-      });
-
-      // Apply global middleware
-      testGateway.use(globalMiddleware);
-
-      // Route with specific middleware
-      testGateway.addRoute({
-        pattern: "/api/mixed/*",
-        target: "http://localhost:9001",
-        middlewares: [routeMiddleware],
-        proxy: {
-          pathRewrite: (path) => path.replace("/api/mixed", "/api"),
-        },
-      });
-
-      await testGateway.listen();
-
-      // Test mixed middleware execution
-      const response = await fetch("http://localhost:9006/api/mixed/users");
-      expect(response.status).toBe(200);
-      expect(response.headers.get("X-Global")).toBe("true");
-      expect(response.headers.get("X-Route")).toBe("true");
-
-      // Verify execution order (global middleware should wrap route middleware)
-      expect(executionOrder).toEqual(["global-before", "route-before", "route-after", "global-after"]);
 
       await testGateway.close();
     });

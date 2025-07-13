@@ -213,7 +213,12 @@ describe("BunGateway Rate Limiting (0http-bun)", () => {
       rateLimit: {
         windowMs: 1000,
         max: 1,
-        message: "Custom rate limit message",
+        handler(req, totalHits, max, resetTime) {
+          return new Response("Custom rate limit message", {
+            status: 429,
+            headers: { "Content-Type": "text/plain" },
+          });
+        },
       },
     });
 
