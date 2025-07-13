@@ -535,10 +535,6 @@ await gateway.listen();
 console.log("🚀 BunGate running on http://localhost:3000");
 ```
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
 ## 📄 License
 
 MIT Licensed - see [LICENSE](LICENSE) for details.
