@@ -15,7 +15,7 @@
         "@types/bun": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "typescript": "^5.8.3",
       },
     },
   },
@@ -54,7 +54,7 @@
 
     "fast-safe-stringify": ["fast-safe-stringify@2.1.1", "", {}, "sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA=="],
 
-    "fetch-gate": ["fetch-gate@1.0.2", "", { "dependencies": { "pino": "^9.7.0" }, "peerDependencies": { "typescript": "^5.8.3" } }, "sha512-C2kdu5xvCBFQSpKm4RkNQqrM05VCeuv+l5MPcYOGqJud3V+UMdZHUrrie0Um8DgcR8HOgQjFiEd/A16knaVrVA=="],
+    "fetch-gate": ["fetch-gate@1.1.0", "", { "dependencies": { "pino": "^9.7.0" }, "peerDependencies": { "typescript": "^5.8.3" } }, "sha512-e/F9+8ootB9s08nG1IOBIrOofnUB7NUF9erSCWmPnoPW2gRWw3VkQXg63ikksdzyRvJ8VsbhYYz9T2pkyWxReQ=="],
 
     "help-me": ["help-me@5.0.0", "", {}, "sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg=="],
 
