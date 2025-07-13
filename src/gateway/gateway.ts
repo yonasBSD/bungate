@@ -54,8 +54,8 @@ export class BunGateway implements Gateway {
       })
     );
 
-    // Add Prometheus metrics middleware if enabled and in development
-    if (this.config.server?.development && this.config.metrics?.enabled !== false) {
+    // Add Prometheus metrics middleware if enabled and NOT in development
+    if (!this.config.server?.development && this.config.metrics?.enabled === true) {
       const prometheusOptions: PrometheusMiddlewareOptions = {
         excludePaths: ["/health", "/metrics", "/favicon.ico"],
         collectDefaultMetrics: this.config.metrics?.collectDefaultMetrics ?? true,
@@ -276,7 +276,7 @@ export class BunGateway implements Gateway {
               beforeCircuitBreakerExecution: route.hooks?.beforeCircuitBreakerExecution,
               onError: (req: Request, error: Error) => {
                 if (route.hooks?.onError) {
-                  route.hooks.onError!(req, error);
+                  return route.hooks.onError!(req, error);
                 }
               },
             });
