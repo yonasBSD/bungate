@@ -1,8 +1,13 @@
-import type { Server } from "bun";
-import type { RouteConfig } from "./route.ts";
-import type { BodyParserOptions, JWTAuthOptions, RequestHandler, ZeroRequest } from "./middleware.ts";
-import type { ProxyOptions } from "./proxy.ts";
-import type { Logger } from "./logger.ts";
+import type { Server } from 'bun'
+import type { RouteConfig } from './route'
+import type {
+  BodyParserOptions,
+  JWTAuthOptions,
+  RequestHandler,
+  ZeroRequest,
+} from './middleware'
+import type { ProxyOptions } from './proxy'
+import type { Logger } from './logger'
 
 /**
  * Gateway configuration interface
@@ -12,84 +17,88 @@ export interface GatewayConfig {
    * Server configuration
    */
   server?: {
-    port?: number;
-    hostname?: string;
-    development?: boolean;
-  };
+    port?: number
+    hostname?: string
+    development?: boolean
+  }
 
   /**
    * Default route handler (404 handler)
    */
-  defaultRoute?: (req: ZeroRequest) => Response | Promise<Response>;
+  defaultRoute?: (req: ZeroRequest) => Response | Promise<Response>
 
   /**
    * Global error handler
    */
-  errorHandler?: (err: Error) => Response | Promise<Response>;
+  errorHandler?: (err: Error) => Response | Promise<Response>
 
   /**
    * Routes configuration
    */
-  routes?: RouteConfig[];
+  routes?: RouteConfig[]
 
   /**
    * Global proxy configuration
    */
-  proxy?: ProxyOptions;
+  proxy?: ProxyOptions
 
   /**
    * CORS configuration
    */
   cors?: {
-    origin?: string | string[] | boolean | ((origin: string, req: ZeroRequest) => boolean | string);
-    methods?: string[];
-    allowedHeaders?: string[];
-    exposedHeaders?: string[];
-    credentials?: boolean;
-    maxAge?: number;
-  };
+    origin?:
+      | string
+      | string[]
+      | boolean
+      | ((origin: string, req: ZeroRequest) => boolean | string)
+    methods?: string[]
+    allowedHeaders?: string[]
+    exposedHeaders?: string[]
+    credentials?: boolean
+    maxAge?: number
+  }
 
   /**
    * Rate limiting configuration
    */
   rateLimit?: {
-    windowMs?: number;
-    max?: number;
-    keyGenerator?: (req: ZeroRequest) => string;
-    standardHeaders?: boolean;
-  };
+    windowMs?: number
+    max?: number
+    keyGenerator?: (req: ZeroRequest) => string
+    standardHeaders?: boolean
+  }
 
   /**
    * JWT Authentication configuration
    */
-  auth?: JWTAuthOptions;
+  auth?: JWTAuthOptions
 
   /**
    * Body parser configuration
    */
-  bodyParser?: BodyParserOptions;
+  bodyParser?: BodyParserOptions
 
   /**
    * Logging configuration
    */
-  logger?: Logger;
+  logger?: Logger
 
   /**
    * Health check configuration
    */
   healthCheck?: {
-    path?: string;
-    enabled?: boolean;
-  };
+    path?: string
+    enabled?: boolean
+  }
 
   /**
    * Metrics configuration
    */
   metrics?: {
-    enabled?: boolean;
-    endpoint?: string;
-    collectDefaultMetrics?: boolean;
-  };
+    enabled?: boolean
+    endpoint?: string
+    collectDefaultMetrics?: boolean
+  }
 }
 
 /**
@@ -99,66 +108,66 @@ export interface Gateway {
   /**
    * Main fetch handler for Bun.serve
    */
-  fetch: (req: Request) => Response | Promise<Response>;
+  fetch: (req: Request) => Response | Promise<Response>
 
   /**
    * Register middleware (global)
    */
-  use(middleware: RequestHandler): this;
+  use(middleware: RequestHandler): this
 
   /**
    * Register middleware for specific path
    */
-  use(pattern: string, middleware: RequestHandler): this;
+  use(pattern: string, middleware: RequestHandler): this
 
   /**
    * Register multiple middlewares
    */
-  use(...middlewares: RequestHandler[]): this;
+  use(...middlewares: RequestHandler[]): this
 
   /**
    * Register route handler for specific HTTP method and pattern
    */
-  on(method: string, pattern: string, ...handlers: RequestHandler[]): this;
+  on(method: string, pattern: string, ...handlers: RequestHandler[]): this
 
   /**
    * HTTP method shortcuts
    */
-  get(pattern: string, ...handlers: RequestHandler[]): this;
-  post(pattern: string, ...handlers: RequestHandler[]): this;
-  put(pattern: string, ...handlers: RequestHandler[]): this;
-  patch(pattern: string, ...handlers: RequestHandler[]): this;
-  delete(pattern: string, ...handlers: RequestHandler[]): this;
-  head(pattern: string, ...handlers: RequestHandler[]): this;
-  options(pattern: string, ...handlers: RequestHandler[]): this;
-  all(pattern: string, ...handlers: RequestHandler[]): this;
+  get(pattern: string, ...handlers: RequestHandler[]): this
+  post(pattern: string, ...handlers: RequestHandler[]): this
+  put(pattern: string, ...handlers: RequestHandler[]): this
+  patch(pattern: string, ...handlers: RequestHandler[]): this
+  delete(pattern: string, ...handlers: RequestHandler[]): this
+  head(pattern: string, ...handlers: RequestHandler[]): this
+  options(pattern: string, ...handlers: RequestHandler[]): this
+  all(pattern: string, ...handlers: RequestHandler[]): this
 
   /**
    * Add a route configuration dynamically
    */
-  addRoute(route: RouteConfig): void;
+  addRoute(route: RouteConfig): void
 
   /**
    * Remove a route dynamically.
    *
    * @todo: NOT IMPLEMENTED IN 0http-bun YET
    */
-  removeRoute(pattern: string): void;
+  removeRoute(pattern: string): void
 
   /**
    * Get current gateway configuration
    */
-  getConfig(): GatewayConfig;
+  getConfig(): GatewayConfig
 
   /**
    * Start the gateway server (if not using Bun.serve directly)
    */
-  listen(port?: number): Promise<Server>;
+  listen(port?: number): Promise<Server>
 
   /**
    * Stop the gateway server
    */
-  close(): Promise<void>;
+  close(): Promise<void>
 }
 
 /**
@@ -168,15 +177,15 @@ export interface IGatewayConfig {
   /**
    * Port number (for reference)
    */
-  port?: number;
+  port?: number
 
   /**
    * Default route handler (404 handler)
    */
-  defaultRoute?: (req: ZeroRequest) => Response | Promise<Response>;
+  defaultRoute?: (req: ZeroRequest) => Response | Promise<Response>
 
   /**
    * Global error handler
    */
-  errorHandler?: (err: Error, req: ZeroRequest) => Response | Promise<Response>;
+  errorHandler?: (err: Error, req: ZeroRequest) => Response | Promise<Response>
 }

@@ -1,14 +1,14 @@
-import { BunGateway } from "../";
-import { BunGateLogger } from "../";
+import { BunGateway } from '../src'
+import { BunGateLogger } from '../src'
 
 const logger = new BunGateLogger({
-  level: "error",
+  level: 'error',
   transport: {
-    target: "pino-pretty",
+    target: 'pino-pretty',
     options: {
       colorize: true,
-      translateTime: "SYS:standard",
-      ignore: "pid,hostname",
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname',
     },
   },
   serializers: {
@@ -20,19 +20,19 @@ const logger = new BunGateLogger({
       statusCode: res.status,
     }),
   },
-});
+})
 const gateway = new BunGateway({
   logger,
   server: { port: 3000, development: false },
-});
+})
 
 // Basic rate limiting example
 gateway.addRoute({
-  pattern: "/api/simple/*",
-  target: "http://localhost:8080",
+  pattern: '/api/simple/*',
+  target: 'http://localhost:8080',
   proxy: {
     pathRewrite: (path) => {
-      return path.replace("/api/simple", "");
+      return path.replace('/api/simple', '')
     },
   },
   // rateLimit: {
@@ -43,11 +43,11 @@ gateway.addRoute({
   //     return req.ctx?.user?.id || req.headers.get("x-forwarded-for") || "anonymous";
   //   },
   // },
-});
+})
 
 // Basic rate limiting example
 gateway.addRoute({
-  pattern: "/api/lb/*",
+  pattern: '/api/lb/*',
   // rateLimit: {
   //   windowMs: 60000, // 1 minute
   //   max: 100, // 100 requests per user per minute
@@ -61,24 +61,24 @@ gateway.addRoute({
       enabled: true,
       interval: 5000, // Check every 5 seconds
       timeout: 2000, // Timeout after 2 seconds
-      path: "/get",
+      path: '/get',
     },
     targets: [
-      { url: "http://localhost:8080", weight: 1 },
-      { url: "http://localhost:8081", weight: 1 },
+      { url: 'http://localhost:8080', weight: 1 },
+      { url: 'http://localhost:8081', weight: 1 },
     ],
-    strategy: "least-connections",
+    strategy: 'least-connections',
   },
   proxy: {
     pathRewrite: (path) => {
-      return path.replace("/api/lb", "");
+      return path.replace('/api/lb', '')
     },
   },
   hooks: {
     afterCircuitBreakerExecution: async (req, result) => {
       logger.info(
-        `Circuit breaker ${result.success ? "succeeded" : "failed"} for ${req.url} after ${result.executionTimeMs} ms`
-      );
+        `Circuit breaker ${result.success ? 'succeeded' : 'failed'} for ${req.url} after ${result.executionTimeMs} ms`,
+      )
     },
   },
   circuitBreaker: {
@@ -87,15 +87,15 @@ gateway.addRoute({
     resetTimeout: 10000, // Reset after 10 seconds
     timeout: 2000, // Timeout after 2 seconds
   },
-});
+})
 
 // Start the server
-await gateway.listen(3000);
-console.log("Gateway running on http://localhost:3000");
+await gateway.listen(3000)
+console.log('Gateway running on http://localhost:3000')
 
 // Graceful shutdown
-process.on("SIGINT", async () => {
-  console.log("\nShutting down...");
-  await gateway.close();
-  process.exit(0);
-});
+process.on('SIGINT', async () => {
+  console.log('\nShutting down...')
+  await gateway.close()
+  process.exit(0)
+})

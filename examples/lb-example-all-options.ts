@@ -11,25 +11,25 @@
  * - Advanced proxy features
  */
 
-import { BunGateway } from "../";
-import { BunGateLogger } from "../";
+import { BunGateway } from '../src'
+import { BunGateLogger } from '../src'
 
 // Create a detailed logger for demo purposes
 const logger = new BunGateLogger({
-  level: "debug",
+  level: 'debug',
   transport: {
-    target: "pino-pretty",
+    target: 'pino-pretty',
     options: {
       colorize: true,
-      translateTime: "SYS:standard",
-      ignore: "pid,hostname",
-      messageFormat: "🔄 {msg}",
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname',
+      messageFormat: '🔄 {msg}',
     },
   },
-});
+})
 
-console.log("🚀 Load Balancer Comprehensive Demo");
-console.log("=".repeat(60));
+console.log('🚀 Load Balancer Comprehensive Demo')
+console.log('='.repeat(60))
 
 // Initialize the gateway
 const gateway = new BunGateway({
@@ -37,75 +37,77 @@ const gateway = new BunGateway({
   server: {
     port: 3000,
     development: true,
-    hostname: "0.0.0.0",
+    hostname: '0.0.0.0',
   },
-});
+})
 
 // =============================================================================
 // 1. ROUND ROBIN LOAD BALANCER WITH HEALTH CHECKS
 // =============================================================================
-console.log("\n1️⃣  Round Robin with Health Checks");
+console.log('\n1️⃣  Round Robin with Health Checks')
 
 gateway.addRoute({
-  pattern: "/api/round-robin/*",
+  pattern: '/api/round-robin/*',
   loadBalancer: {
-    strategy: "round-robin",
+    strategy: 'round-robin',
     targets: [
-      { url: "http://localhost:8080", weight: 1 },
-      { url: "http://localhost:8081", weight: 1 },
+      { url: 'http://localhost:8080', weight: 1 },
+      { url: 'http://localhost:8081', weight: 1 },
     ],
     healthCheck: {
       enabled: true,
       interval: 10000, // Check every 10 seconds
       timeout: 5000, // 5 second timeout
-      path: "/get", // Health check endpoint
+      path: '/get', // Health check endpoint
       expectedStatus: 200,
     },
   },
   proxy: {
-    pathRewrite: (path) => path.replace("/api/round-robin", ""),
+    pathRewrite: (path) => path.replace('/api/round-robin', ''),
     timeout: 10000,
     headers: {
-      "User-Agent": "BunGate-LoadBalancer-Demo/1.0",
-      Accept: "application/json",
+      'User-Agent': 'BunGate-LoadBalancer-Demo/1.0',
+      Accept: 'application/json',
     },
   },
   hooks: {
     beforeRequest: async (req) => {
-      logger.info(`🔄 Round-robin request to: ${req.url}`);
+      logger.info(`🔄 Round-robin request to: ${req.url}`)
     },
     afterResponse: async (req, res) => {
-      logger.info(`✅ Round-robin response: ${res.status} in ${res.headers.get("x-response-time") || "N/A"}ms`);
+      logger.info(
+        `✅ Round-robin response: ${res.status} in ${res.headers.get('x-response-time') || 'N/A'}ms`,
+      )
     },
   },
-});
+})
 
 // =============================================================================
 // 2. WEIGHTED LOAD BALANCER FOR HIGH-PERFORMANCE SCENARIOS
 // =============================================================================
-console.log("2️⃣  Weighted Load Balancer (Performance Optimized)");
+console.log('2️⃣  Weighted Load Balancer (Performance Optimized)')
 
 gateway.addRoute({
-  pattern: "/api/weighted/*",
+  pattern: '/api/weighted/*',
   loadBalancer: {
-    strategy: "weighted",
+    strategy: 'weighted',
     targets: [
-      { url: "http://localhost:8080", weight: 5 },
-      { url: "http://localhost:8081", weight: 1 },
+      { url: 'http://localhost:8080', weight: 5 },
+      { url: 'http://localhost:8081', weight: 1 },
     ],
     healthCheck: {
       enabled: true,
       interval: 15000,
       timeout: 3000,
-      path: "/",
+      path: '/',
       expectedStatus: 200,
     },
   },
   proxy: {
-    pathRewrite: (path) => path.replace("/api/weighted", ""),
+    pathRewrite: (path) => path.replace('/api/weighted', ''),
     timeout: 8000,
     headers: {
-      "X-Load-Balancer": "weighted",
+      'X-Load-Balancer': 'weighted',
     },
   },
   circuitBreaker: {
@@ -114,93 +116,102 @@ gateway.addRoute({
     resetTimeout: 30000,
     timeout: 5000,
   },
-});
+})
 
 // =============================================================================
 // 3. LEAST CONNECTIONS FOR STATEFUL SERVICES
 // =============================================================================
-console.log("3️⃣  Least Connections Strategy");
+console.log('3️⃣  Least Connections Strategy')
 
 gateway.addRoute({
-  pattern: "/api/least-connections/*",
+  pattern: '/api/least-connections/*',
   loadBalancer: {
-    strategy: "least-connections",
-    targets: [{ url: "http://localhost:8080" }, { url: "http://localhost:8081" }],
+    strategy: 'least-connections',
+    targets: [
+      { url: 'http://localhost:8080' },
+      { url: 'http://localhost:8081' },
+    ],
     healthCheck: {
       enabled: true,
       interval: 20000,
       timeout: 4000,
-      path: "/status/200",
+      path: '/status/200',
       expectedStatus: 200,
     },
   },
   proxy: {
-    pathRewrite: (path) => path.replace("/api/least-connections", ""),
+    pathRewrite: (path) => path.replace('/api/least-connections', ''),
     timeout: 12000,
   },
   hooks: {
     beforeRequest: async (req) => {
-      logger.info(`🔗 Least-connections routing for: ${req.url}`);
+      logger.info(`🔗 Least-connections routing for: ${req.url}`)
     },
   },
-});
+})
 
 // =============================================================================
 // 4. IP HASH FOR SESSION AFFINITY
 // =============================================================================
-console.log("4️⃣  IP Hash for Session Affinity");
+console.log('4️⃣  IP Hash for Session Affinity')
 
 gateway.addRoute({
-  pattern: "/api/ip-hash/*",
+  pattern: '/api/ip-hash/*',
   loadBalancer: {
-    strategy: "ip-hash",
-    targets: [{ url: "http://localhost:8080" }, { url: "http://localhost:8081" }],
+    strategy: 'ip-hash',
+    targets: [
+      { url: 'http://localhost:8080' },
+      { url: 'http://localhost:8081' },
+    ],
     healthCheck: {
       enabled: true,
       interval: 25000,
       timeout: 6000,
-      path: "/get",
+      path: '/get',
     },
     stickySession: {
       enabled: true,
-      cookieName: "BUNGATE_SESSION",
+      cookieName: 'BUNGATE_SESSION',
       ttl: 3600000, // 1 hour
     },
   },
   proxy: {
-    pathRewrite: (path) => path.replace("/api/ip-hash", ""),
+    pathRewrite: (path) => path.replace('/api/ip-hash', ''),
     headers: {
-      "X-Session-Affinity": "ip-hash",
+      'X-Session-Affinity': 'ip-hash',
     },
   },
   hooks: {
     beforeRequest: async (req) => {
-      const clientIP = req.headers.get("x-forwarded-for") || "unknown";
-      logger.info(`🏠 IP Hash routing for client: ${clientIP}`);
+      const clientIP = req.headers.get('x-forwarded-for') || 'unknown'
+      logger.info(`🏠 IP Hash routing for client: ${clientIP}`)
     },
   },
-});
+})
 
 // =============================================================================
 // 5. RANDOM STRATEGY WITH ADVANCED ERROR HANDLING
 // =============================================================================
-console.log("5️⃣  Random Strategy with Advanced Error Handling");
+console.log('5️⃣  Random Strategy with Advanced Error Handling')
 
 gateway.addRoute({
-  pattern: "/api/random/*",
+  pattern: '/api/random/*',
   loadBalancer: {
-    strategy: "random",
-    targets: [{ url: "http://localhost:8080" }, { url: "http://localhost:8081" }],
+    strategy: 'random',
+    targets: [
+      { url: 'http://localhost:8080' },
+      { url: 'http://localhost:8081' },
+    ],
     healthCheck: {
       enabled: true,
       interval: 8000,
       timeout: 3000,
-      path: "/",
+      path: '/',
       expectedStatus: 200,
     },
   },
   proxy: {
-    pathRewrite: (path) => path.replace("/api/random", ""),
+    pathRewrite: (path) => path.replace('/api/random', ''),
     timeout: 6000,
   },
   circuitBreaker: {
@@ -211,84 +222,86 @@ gateway.addRoute({
   },
   hooks: {
     onError: async (req, error) => {
-      logger.error(`❌ Random strategy proxy error: ${error.message}`);
+      logger.error(`❌ Random strategy proxy error: ${error.message}`)
     },
     afterCircuitBreakerExecution: async (req, result) => {
       if (result.success) {
-        logger.info(`✅ Circuit breaker succeeded for ${req.url}`);
+        logger.info(`✅ Circuit breaker succeeded for ${req.url}`)
       } else {
-        logger.warn(`⚠️  Circuit breaker failed for ${req.url}: ${result.error}`);
+        logger.warn(
+          `⚠️  Circuit breaker failed for ${req.url}: ${result.error}`,
+        )
       }
     },
   },
-});
+})
 
 // =============================================================================
 // 6. MICROSERVICES ROUTING WITH DIFFERENT STRATEGIES
 // =============================================================================
-console.log("6️⃣  Microservices Routing");
+console.log('6️⃣  Microservices Routing')
 
 // User service with sticky sessions
 gateway.addRoute({
-  pattern: "/api/users/*",
+  pattern: '/api/users/*',
   loadBalancer: {
-    strategy: "ip-hash",
+    strategy: 'ip-hash',
     targets: [
-      { url: "http://localhost:8080", weight: 1 },
-      { url: "http://localhost:8081", weight: 1 },
+      { url: 'http://localhost:8080', weight: 1 },
+      { url: 'http://localhost:8081', weight: 1 },
     ],
     healthCheck: {
       enabled: true,
       interval: 12000,
       timeout: 4000,
-      path: "/users/1",
+      path: '/users/1',
       expectedStatus: 200,
     },
     stickySession: {
       enabled: true,
-      cookieName: "USER_SESSION",
+      cookieName: 'USER_SESSION',
       ttl: 1800000, // 30 minutes
     },
   },
   proxy: {
-    pathRewrite: (path) => path.replace("/api/users", "/users"),
+    pathRewrite: (path) => path.replace('/api/users', '/users'),
     headers: {
-      "X-Service": "users",
+      'X-Service': 'users',
     },
   },
-});
+})
 
 // Posts service with weighted distribution
 gateway.addRoute({
-  pattern: "/api/posts/*",
+  pattern: '/api/posts/*',
   loadBalancer: {
-    strategy: "weighted",
+    strategy: 'weighted',
     targets: [
-      { url: "http://localhost:8080", weight: 4 },
-      { url: "http://localhost:8081", weight: 1 },
+      { url: 'http://localhost:8080', weight: 4 },
+      { url: 'http://localhost:8081', weight: 1 },
     ],
     healthCheck: {
       enabled: true,
       interval: 15000,
       timeout: 5000,
-      path: "/posts/1",
+      path: '/posts/1',
     },
   },
   proxy: {
-    pathRewrite: (path) => path.replace("/api/posts", "/posts"),
+    pathRewrite: (path) => path.replace('/api/posts', '/posts'),
     headers: {
-      "X-Service": "posts",
+      'X-Service': 'posts',
     },
   },
-});
+})
 
 // =============================================================================
 // 7. MONITORING AND METRICS ENDPOINT
 // =============================================================================
-console.log("7️⃣  Monitoring and Metrics");
+console.log('7️⃣  Monitoring and Metrics')
 
 gateway.addRoute({
-  pattern: "/metrics",
+  pattern: '/metrics',
   handler: async (req) => {
     const stats = {
       timestamp: new Date().toISOString(),
@@ -296,61 +309,61 @@ gateway.addRoute({
       memory: process.memoryUsage(),
       // Note: In a real implementation, you'd collect these from the load balancers
       loadBalancers: {
-        "round-robin": "Active",
-        weighted: "Active",
-        "least-connections": "Active",
-        "ip-hash": "Active",
-        random: "Active",
+        'round-robin': 'Active',
+        weighted: 'Active',
+        'least-connections': 'Active',
+        'ip-hash': 'Active',
+        random: 'Active',
       },
-    };
+    }
 
     return new Response(JSON.stringify(stats, null, 2), {
       headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
       },
-    });
+    })
   },
-});
+})
 
 // =============================================================================
 // 8. HEALTH CHECK ENDPOINT
 // =============================================================================
 gateway.addRoute({
-  pattern: "/health",
+  pattern: '/health',
   handler: async (req) => {
     return new Response(
       JSON.stringify({
-        status: "healthy",
+        status: 'healthy',
         timestamp: new Date().toISOString(),
-        service: "bungate-load-balancer-demo",
-        version: "1.0.0",
+        service: 'bungate-load-balancer-demo',
+        version: '1.0.0',
       }),
       {
         status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+        headers: { 'Content-Type': 'application/json' },
+      },
+    )
   },
-});
+})
 
 // =============================================================================
 // 9. DEMO ENDPOINTS FOR TESTING
 // =============================================================================
 gateway.addRoute({
-  pattern: "/demo",
+  pattern: '/demo',
   handler: async (req) => {
     const demoEndpoints = {
-      "Round Robin": "/api/round-robin/get",
-      Weighted: "/api/weighted/get",
-      "Least Connections": "/api/least-connections/get",
-      "IP Hash": "/api/ip-hash/get",
-      Random: "/api/random/get",
-      "Users Service": "/api/users/1",
-      "Posts Service": "/api/posts/1",
-      Metrics: "/metrics",
-      Health: "/health",
-    };
+      'Round Robin': '/api/round-robin/get',
+      Weighted: '/api/weighted/get',
+      'Least Connections': '/api/least-connections/get',
+      'IP Hash': '/api/ip-hash/get',
+      Random: '/api/random/get',
+      'Users Service': '/api/users/1',
+      'Posts Service': '/api/posts/1',
+      Metrics: '/metrics',
+      Health: '/health',
+    }
 
     const html = `
     <!DOCTYPE html>
@@ -379,97 +392,97 @@ gateway.addRoute({
               `<div class="endpoint">
              <strong>${name}:</strong> 
              <a href="${path}" target="_blank">${path}</a>
-           </div>`
+           </div>`,
           )
-          .join("")}
+          .join('')}
         
         <hr>
         <p><em>Try accessing the endpoints above to see load balancing in action!</em></p>
     </body>
-    </html>`;
+    </html>`
 
     return new Response(html, {
-      headers: { "Content-Type": "text/html" },
-    });
+      headers: { 'Content-Type': 'text/html' },
+    })
   },
-});
+})
 
 // =============================================================================
 // START THE SERVER
 // =============================================================================
-console.log("\n🌟 Starting Load Balancer Demo Server...");
+console.log('\n🌟 Starting Load Balancer Demo Server...')
 
 try {
-  await gateway.listen(3000);
+  await gateway.listen(3000)
 
-  console.log("\n" + "=".repeat(60));
-  console.log("🚀 Load Balancer Demo Server Running!");
-  console.log("=".repeat(60));
-  console.log("📍 Base URL: http://localhost:3000");
-  console.log("🎯 Demo Page: http://localhost:3000/demo");
-  console.log("📊 Metrics: http://localhost:3000/metrics");
-  console.log("💚 Health: http://localhost:3000/health");
-  console.log("=".repeat(60));
+  console.log('\n' + '='.repeat(60))
+  console.log('🚀 Load Balancer Demo Server Running!')
+  console.log('='.repeat(60))
+  console.log('📍 Base URL: http://localhost:3000')
+  console.log('🎯 Demo Page: http://localhost:3000/demo')
+  console.log('📊 Metrics: http://localhost:3000/metrics')
+  console.log('💚 Health: http://localhost:3000/health')
+  console.log('='.repeat(60))
 
-  console.log("\n🔍 Available Load Balancer Endpoints:");
-  console.log("   • Round Robin: /api/round-robin/*");
-  console.log("   • Weighted: /api/weighted/*");
-  console.log("   • Least Connections: /api/least-connections/*");
-  console.log("   • IP Hash: /api/ip-hash/*");
-  console.log("   • Random: /api/random/*");
-  console.log("   • Users Service: /api/users/*");
-  console.log("   • Posts Service: /api/posts/*");
+  console.log('\n🔍 Available Load Balancer Endpoints:')
+  console.log('   • Round Robin: /api/round-robin/*')
+  console.log('   • Weighted: /api/weighted/*')
+  console.log('   • Least Connections: /api/least-connections/*')
+  console.log('   • IP Hash: /api/ip-hash/*')
+  console.log('   • Random: /api/random/*')
+  console.log('   • Users Service: /api/users/*')
+  console.log('   • Posts Service: /api/posts/*')
 
-  console.log("\n💡 Features Demonstrated:");
-  console.log("   ✅ All load balancing strategies");
-  console.log("   ✅ Health checks with custom intervals");
-  console.log("   ✅ Sticky sessions and session affinity");
-  console.log("   ✅ Circuit breakers and error handling");
-  console.log("   ✅ Caching and performance optimization");
-  console.log("   ✅ Request/response logging and monitoring");
-  console.log("   ✅ Dynamic target management");
-  console.log("   ✅ Microservices routing patterns");
+  console.log('\n💡 Features Demonstrated:')
+  console.log('   ✅ All load balancing strategies')
+  console.log('   ✅ Health checks with custom intervals')
+  console.log('   ✅ Sticky sessions and session affinity')
+  console.log('   ✅ Circuit breakers and error handling')
+  console.log('   ✅ Caching and performance optimization')
+  console.log('   ✅ Request/response logging and monitoring')
+  console.log('   ✅ Dynamic target management')
+  console.log('   ✅ Microservices routing patterns')
 
-  console.log("\n🧪 Test Commands:");
-  console.log("   curl http://localhost:3000/api/round-robin/get");
-  console.log("   curl http://localhost:3000/api/weighted/get");
-  console.log("   curl http://localhost:3000/api/users/1");
-  console.log("   curl http://localhost:3000/metrics");
+  console.log('\n🧪 Test Commands:')
+  console.log('   curl http://localhost:3000/api/round-robin/get')
+  console.log('   curl http://localhost:3000/api/weighted/get')
+  console.log('   curl http://localhost:3000/api/users/1')
+  console.log('   curl http://localhost:3000/metrics')
 } catch (error) {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  logger.error(`❌ Failed to start server: ${errorMessage}`);
-  process.exit(1);
+  const errorMessage = error instanceof Error ? error.message : String(error)
+  logger.error(`❌ Failed to start server: ${errorMessage}`)
+  process.exit(1)
 }
 
 // =============================================================================
 // GRACEFUL SHUTDOWN
 // =============================================================================
 const gracefulShutdown = async (signal: string) => {
-  console.log(`\n🛑 Received ${signal}, starting graceful shutdown...`);
+  console.log(`\n🛑 Received ${signal}, starting graceful shutdown...`)
 
   try {
-    await gateway.close();
-    console.log("✅ Gateway closed successfully");
-    console.log("👋 Load Balancer Demo shutdown complete");
-    process.exit(0);
+    await gateway.close()
+    console.log('✅ Gateway closed successfully')
+    console.log('👋 Load Balancer Demo shutdown complete')
+    process.exit(0)
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`❌ Error during shutdown: ${errorMessage}`);
-    process.exit(1);
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error(`❌ Error during shutdown: ${errorMessage}`)
+    process.exit(1)
   }
-};
+}
 
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'))
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
 
 // Handle uncaught exceptions
-process.on("uncaughtException", (error) => {
-  logger.error(`💥 Uncaught Exception: ${error.message}`);
-  console.error(error);
-  process.exit(1);
-});
+process.on('uncaughtException', (error) => {
+  logger.error(`💥 Uncaught Exception: ${error.message}`)
+  console.error(error)
+  process.exit(1)
+})
 
-process.on("unhandledRejection", (reason, promise) => {
-  logger.error(`💥 Unhandled Rejection at: ${promise}, reason: ${reason}`);
-  process.exit(1);
-});
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error(`💥 Unhandled Rejection at: ${promise}, reason: ${reason}`)
+  process.exit(1)
+})

@@ -33,42 +33,46 @@ touch gateway.ts
 ```
 
 ```typescript
-import { BunGateway } from "bungate";
+import { BunGateway } from 'bungate'
 
 // Create a production-ready gateway with zero config
 const gateway = new BunGateway({
   server: { port: 3000 },
   metrics: { enabled: true }, // Enable Prometheus metrics
-});
+})
 
 // Add intelligent load balancing
 gateway.addRoute({
-  pattern: "/api/*",
+  pattern: '/api/*',
   loadBalancer: {
-    targets: ["http://api1.example.com", "http://api2.example.com", "http://api3.example.com"],
-    strategy: "least-connections",
+    targets: [
+      'http://api1.example.com',
+      'http://api2.example.com',
+      'http://api3.example.com',
+    ],
+    strategy: 'least-connections',
     healthCheck: {
       enabled: true,
       interval: 30000,
       timeout: 5000,
     },
   },
-});
+})
 
 // Add rate limiting and single target for public routes
 gateway.addRoute({
-  pattern: "/public/*",
-  target: "http://backend.example.com",
+  pattern: '/public/*',
+  target: 'http://backend.example.com',
   rateLimit: {
     max: 1000,
     windowMs: 60000,
-    keyGenerator: (req) => req.headers.get("x-forwarded-for") || "unknown",
+    keyGenerator: (req) => req.headers.get('x-forwarded-for') || 'unknown',
   },
-});
+})
 
 // Start the gateway
-await gateway.listen();
-console.log("🚀 BunGate running on http://localhost:3000");
+await gateway.listen()
+console.log('🚀 BunGate running on http://localhost:3000')
 ```
 
 **That's it!** Your high-performance gateway is now handling traffic with:
@@ -138,41 +142,42 @@ console.log("🚀 BunGate running on http://localhost:3000");
 Perfect for microservices architectures with intelligent routing:
 
 ```typescript
-import { BunGateway } from "bungate";
+import { BunGateway } from 'bungate'
 
 const gateway = new BunGateway({
   server: { port: 8080 },
   cors: {
-    origin: ["https://myapp.com", "https://admin.myapp.com"],
+    origin: ['https://myapp.com', 'https://admin.myapp.com'],
     credentials: true,
   },
-});
+})
 
 // User service with JWT authentication
 gateway.addRoute({
-  pattern: "/users/*",
-  target: "http://user-service:3001",
+  pattern: '/users/*',
+  target: 'http://user-service:3001',
   auth: {
-    secret: process.env.JWT_SECRET || "your-secret-key",
+    secret: process.env.JWT_SECRET || 'your-secret-key',
     jwtOptions: {
-      algorithms: ["HS256"],
-      issuer: "https://auth.myapp.com",
-      audience: "https://api.myapp.com",
+      algorithms: ['HS256'],
+      issuer: 'https://auth.myapp.com',
+      audience: 'https://api.myapp.com',
     },
     optional: false,
-    excludePaths: ["/users/register", "/users/login"],
+    excludePaths: ['/users/register', '/users/login'],
   },
   rateLimit: {
     max: 100,
     windowMs: 60000,
-    keyGenerator: (req) => (req as any).user?.id || req.headers.get("x-forwarded-for") || "unknown",
+    keyGenerator: (req) =>
+      (req as any).user?.id || req.headers.get('x-forwarded-for') || 'unknown',
   },
-});
+})
 
 // Payment service with circuit breaker
 gateway.addRoute({
-  pattern: "/payments/*",
-  target: "http://payment-service:3002",
+  pattern: '/payments/*',
+  target: 'http://payment-service:3002',
   circuitBreaker: {
     enabled: true,
     failureThreshold: 3,
@@ -182,10 +187,10 @@ gateway.addRoute({
   hooks: {
     onError(req, error): Promise<Response> {
       // Fallback to cached payment status
-      return getCachedPaymentStatus(req.params.id);
+      return getCachedPaymentStatus(req.params.id)
     },
   },
-});
+})
 ```
 
 ### 🔄 **Advanced Load Balancing**
@@ -195,39 +200,51 @@ Distribute traffic intelligently across multiple backends:
 ```typescript
 // E-commerce platform with weighted distribution
 gateway.addRoute({
-  pattern: "/products/*",
+  pattern: '/products/*',
   loadBalancer: {
-    targets: ["http://api1.example.com", "http://api2.example.com", "http://api3.example.com"],
-    strategy: "weighted",
     targets: [
-      { url: "http://products-primary:3000", weight: 70 },
-      { url: "http://products-secondary:3001", weight: 20 },
-      { url: "http://products-cache:3002", weight: 10 },
+      'http://api1.example.com',
+      'http://api2.example.com',
+      'http://api3.example.com',
+    ],
+    strategy: 'weighted',
+    targets: [
+      { url: 'http://products-primary:3000', weight: 70 },
+      { url: 'http://products-secondary:3001', weight: 20 },
+      { url: 'http://products-cache:3002', weight: 10 },
     ],
     healthCheck: {
       enabled: true,
-      path: "/health",
+      path: '/health',
       interval: 15000,
       timeout: 5000,
       expectedStatus: 200,
     },
   },
-});
+})
 
 // Session-sticky load balancing for stateful apps
 gateway.addRoute({
-  pattern: "/app/*",
+  pattern: '/app/*',
   loadBalancer: {
-    targets: ["http://api1.example.com", "http://api2.example.com", "http://api3.example.com"],
-    strategy: "ip-hash",
-    targets: ["http://app-server-1:3000", "http://app-server-2:3000", "http://app-server-3:3000"],
+    targets: [
+      'http://api1.example.com',
+      'http://api2.example.com',
+      'http://api3.example.com',
+    ],
+    strategy: 'ip-hash',
+    targets: [
+      'http://app-server-1:3000',
+      'http://app-server-2:3000',
+      'http://app-server-3:3000',
+    ],
     stickySession: {
       enabled: true,
-      cookieName: "app-session",
+      cookieName: 'app-session',
       ttl: 3600000, // 1 hour
     },
   },
-});
+})
 ```
 
 ### 🛡️ **Enterprise Security**
@@ -237,55 +254,58 @@ Production-grade security with multiple layers:
 ```typescript
 // API Gateway with comprehensive security
 gateway.addRoute({
-  pattern: "/api/v1/*",
-  target: "http://api-backend:3000",
+  pattern: '/api/v1/*',
+  target: 'http://api-backend:3000',
   auth: {
     // JWT authentication
     secret: process.env.JWT_SECRET,
     jwtOptions: {
-      algorithms: ["HS256", "RS256"],
-      issuer: "https://auth.myapp.com",
-      audience: "https://api.myapp.com",
+      algorithms: ['HS256', 'RS256'],
+      issuer: 'https://auth.myapp.com',
+      audience: 'https://api.myapp.com',
     },
     // API key authentication (fallback)
     apiKeys: async (key, req) => {
-      const validKeys = await getValidApiKeys();
-      return validKeys.includes(key);
+      const validKeys = await getValidApiKeys()
+      return validKeys.includes(key)
     },
-    apiKeyHeader: "x-api-key",
+    apiKeyHeader: 'x-api-key',
     optional: false,
-    excludePaths: ["/api/v1/health", "/api/v1/public/*"],
+    excludePaths: ['/api/v1/health', '/api/v1/public/*'],
   },
   middlewares: [
     // Request validation
     async (req, next) => {
-      if (req.method === "POST" || req.method === "PUT") {
-        const body = await req.json();
-        const validation = validateRequestBody(body);
+      if (req.method === 'POST' || req.method === 'PUT') {
+        const body = await req.json()
+        const validation = validateRequestBody(body)
         if (!validation.valid) {
           return new Response(JSON.stringify(validation.errors), {
             status: 400,
-            headers: { "Content-Type": "application/json" },
-          });
+            headers: { 'Content-Type': 'application/json' },
+          })
         }
       }
-      return next();
+      return next()
     },
   ],
   rateLimit: {
     max: 1000,
     windowMs: 60000,
     keyGenerator: (req) =>
-      (req as any).user?.id || req.headers.get("x-api-key") || req.headers.get("x-forwarded-for") || "unknown",
-    message: "API rate limit exceeded",
+      (req as any).user?.id ||
+      req.headers.get('x-api-key') ||
+      req.headers.get('x-forwarded-for') ||
+      'unknown',
+    message: 'API rate limit exceeded',
   },
   proxy: {
     headers: {
-      "X-Gateway-Version": "1.0.0",
-      "X-Request-ID": () => crypto.randomUUID(),
+      'X-Gateway-Version': '1.0.0',
+      'X-Request-ID': () => crypto.randomUUID(),
     },
   },
-});
+})
 ```
 
 ## 🔐 **Built-in Authentication**
@@ -301,132 +321,132 @@ const gateway = new BunGateway({
   auth: {
     secret: process.env.JWT_SECRET,
     jwtOptions: {
-      algorithms: ["HS256", "RS256"],
-      issuer: "https://auth.myapp.com",
-      audience: "https://api.myapp.com",
+      algorithms: ['HS256', 'RS256'],
+      issuer: 'https://auth.myapp.com',
+      audience: 'https://api.myapp.com',
     },
-    excludePaths: ["/health", "/metrics", "/auth/login", "/auth/register"],
+    excludePaths: ['/health', '/metrics', '/auth/login', '/auth/register'],
   },
-});
+})
 
 // Route-level JWT authentication (overrides gateway settings)
 gateway.addRoute({
-  pattern: "/admin/*",
-  target: "http://admin-service:3000",
+  pattern: '/admin/*',
+  target: 'http://admin-service:3000',
   auth: {
     secret: process.env.ADMIN_JWT_SECRET,
     jwtOptions: {
-      algorithms: ["RS256"],
-      issuer: "https://auth.myapp.com",
-      audience: "https://admin.myapp.com",
+      algorithms: ['RS256'],
+      issuer: 'https://auth.myapp.com',
+      audience: 'https://admin.myapp.com',
     },
     optional: false,
   },
-});
+})
 ```
 
 #### JWKS (JSON Web Key Set) Authentication
 
 ```typescript
 gateway.addRoute({
-  pattern: "/secure/*",
-  target: "http://secure-service:3000",
+  pattern: '/secure/*',
+  target: 'http://secure-service:3000',
   auth: {
-    jwksUri: "https://auth.myapp.com/.well-known/jwks.json",
+    jwksUri: 'https://auth.myapp.com/.well-known/jwks.json',
     jwtOptions: {
-      algorithms: ["RS256"],
-      issuer: "https://auth.myapp.com",
-      audience: "https://api.myapp.com",
+      algorithms: ['RS256'],
+      issuer: 'https://auth.myapp.com',
+      audience: 'https://api.myapp.com',
     },
   },
-});
+})
 ```
 
 #### API Key Authentication
 
 ```typescript
 gateway.addRoute({
-  pattern: "/api/public/*",
-  target: "http://public-api:3000",
+  pattern: '/api/public/*',
+  target: 'http://public-api:3000',
   auth: {
     // Static API keys
-    apiKeys: ["key1", "key2", "key3"],
-    apiKeyHeader: "x-api-key",
+    apiKeys: ['key1', 'key2', 'key3'],
+    apiKeyHeader: 'x-api-key',
 
     // Dynamic API key validation
     apiKeyValidator: async (key, req) => {
-      const user = await validateApiKey(key);
+      const user = await validateApiKey(key)
       if (user) {
         // Attach user info to request
-        (req as any).user = user;
-        return true;
+        ;(req as any).user = user
+        return true
       }
-      return false;
+      return false
     },
   },
-});
+})
 ```
 
 #### Mixed Authentication (JWT + API Key)
 
 ```typescript
 gateway.addRoute({
-  pattern: "/api/hybrid/*",
-  target: "http://hybrid-service:3000",
+  pattern: '/api/hybrid/*',
+  target: 'http://hybrid-service:3000',
   auth: {
     // JWT authentication
     secret: process.env.JWT_SECRET,
     jwtOptions: {
-      algorithms: ["HS256"],
-      issuer: "https://auth.myapp.com",
+      algorithms: ['HS256'],
+      issuer: 'https://auth.myapp.com',
     },
 
     // API key fallback
     apiKeys: async (key, req) => {
-      return await isValidApiKey(key);
+      return await isValidApiKey(key)
     },
-    apiKeyHeader: "x-api-key",
+    apiKeyHeader: 'x-api-key',
 
     // Custom token extraction
     getToken: (req) => {
       return (
-        req.headers.get("authorization")?.replace("Bearer ", "") ||
-        req.headers.get("x-access-token") ||
-        new URL(req.url).searchParams.get("token")
-      );
+        req.headers.get('authorization')?.replace('Bearer ', '') ||
+        req.headers.get('x-access-token') ||
+        new URL(req.url).searchParams.get('token')
+      )
     },
 
     // Custom error handling
     unauthorizedResponse: {
       status: 401,
-      body: { error: "Authentication required", code: "AUTH_REQUIRED" },
-      headers: { "Content-Type": "application/json" },
+      body: { error: 'Authentication required', code: 'AUTH_REQUIRED' },
+      headers: { 'Content-Type': 'application/json' },
     },
   },
-});
+})
 ```
 
 #### OAuth2 / OpenID Connect
 
 ```typescript
 gateway.addRoute({
-  pattern: "/oauth/*",
-  target: "http://oauth-service:3000",
+  pattern: '/oauth/*',
+  target: 'http://oauth-service:3000',
   auth: {
-    jwksUri: "https://accounts.google.com/.well-known/jwks.json",
+    jwksUri: 'https://accounts.google.com/.well-known/jwks.json',
     jwtOptions: {
-      algorithms: ["RS256"],
-      issuer: "https://accounts.google.com",
-      audience: "your-google-client-id",
+      algorithms: ['RS256'],
+      issuer: 'https://accounts.google.com',
+      audience: 'your-google-client-id',
     },
 
     // Custom validation
     onError: (error, req) => {
-      console.error("OAuth validation failed:", error);
-      return new Response("OAuth authentication failed", { status: 401 });
+      console.error('OAuth validation failed:', error)
+      return new Response('OAuth authentication failed', { status: 401 })
     },
   },
-});
+})
 ```
 
 ## 📦 Installation & Setup
@@ -469,16 +489,16 @@ touch gateway.ts
 #### Simple Gateway with Auth
 
 ```typescript
-import { BunGateway, BunGateLogger } from "bungate";
+import { BunGateway, BunGateLogger } from 'bungate'
 
 const logger = new BunGateLogger({
-  level: "error",
+  level: 'error',
   transport: {
-    target: "pino-pretty",
+    target: 'pino-pretty',
     options: {
       colorize: true,
-      translateTime: "SYS:standard",
-      ignore: "pid,hostname",
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname',
     },
   },
   serializers: {
@@ -490,7 +510,7 @@ const logger = new BunGateLogger({
       statusCode: res.status,
     }),
   },
-});
+})
 
 const gateway = new BunGateway({
   server: { port: 3000 },
@@ -499,40 +519,40 @@ const gateway = new BunGateway({
   auth: {
     secret: process.env.JWT_SECRET,
     jwtOptions: {
-      algorithms: ["HS256"],
-      issuer: "https://auth.myapp.com",
+      algorithms: ['HS256'],
+      issuer: 'https://auth.myapp.com',
     },
-    excludePaths: ["/health", "/metrics", "/auth/*"],
+    excludePaths: ['/health', '/metrics', '/auth/*'],
   },
 
   // Enable metrics
   metrics: { enabled: true },
   // Enable logging
   logger,
-});
+})
 
 // Add authenticated routes
 gateway.addRoute({
-  pattern: "/api/users/*",
-  target: "http://user-service:3001",
+  pattern: '/api/users/*',
+  target: 'http://user-service:3001',
   rateLimit: {
     max: 100,
     windowMs: 60000,
   },
-});
+})
 
 // Add public routes with another layer of authentication
 gateway.addRoute({
-  pattern: "/api/public/*",
-  target: "http://public-service:3002",
+  pattern: '/api/public/*',
+  target: 'http://public-service:3002',
   auth: {
-    apiKeys: ["public-key-1", "public-key-2"],
-    apiKeyHeader: "x-public-key",
+    apiKeys: ['public-key-1', 'public-key-2'],
+    apiKeyHeader: 'x-public-key',
   },
-});
+})
 
-await gateway.listen();
-console.log("🚀 BunGate running on http://localhost:3000");
+await gateway.listen()
+console.log('🚀 BunGate running on http://localhost:3000')
 ```
 
 ## 📄 License

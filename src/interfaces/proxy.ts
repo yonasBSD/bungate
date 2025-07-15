@@ -13,16 +13,16 @@ import type {
   ErrorHook,
   CircuitBreakerResult,
   CircuitState,
-} from "fetch-gate";
+} from 'fetch-gate'
 
 // Import the FetchProxy class for advanced proxy customization
-import type { FetchProxy } from "fetch-gate/lib/proxy";
+import type { FetchProxy } from 'fetch-gate/lib/proxy'
 
 // Import the CircuitBreaker class for advanced circuit breaker customization
-import type { CircuitBreaker as FetchGateCircuitBreaker } from "fetch-gate/lib/circuit-breaker";
+import type { CircuitBreaker as FetchGateCircuitBreaker } from 'fetch-gate/lib/circuit-breaker'
 
 // Import utility types and logger from fetch-gate
-import type { ProxyLogger, LogContext } from "fetch-gate/lib/logger";
+import type { ProxyLogger, LogContext } from 'fetch-gate/lib/logger'
 
 export type {
   ProxyOptions,
@@ -39,10 +39,10 @@ export type {
   FetchGateCircuitBreaker,
   ProxyLogger,
   LogContext,
-};
+}
 
 // Import ZeroRequest from our middleware types for gateway-specific interfaces
-import type { ZeroRequest } from "./middleware.ts";
+import type { ZeroRequest } from './middleware'
 
 /**
  * Gateway-specific proxy handler interface
@@ -52,36 +52,40 @@ export interface ProxyHandler {
   /**
    * Proxy a request to target (gateway-specific with ZeroRequest)
    */
-  proxy(req: ZeroRequest, source?: string, opts?: ProxyRequestOptions): Promise<Response>;
+  proxy(
+    req: ZeroRequest,
+    source?: string,
+    opts?: ProxyRequestOptions,
+  ): Promise<Response>
 
   /**
    * Close proxy instance
    */
-  close(): void;
+  close(): void
 
   /**
    * Get circuit breaker state
    */
-  getCircuitBreakerState(): CircuitState;
+  getCircuitBreakerState(): CircuitState
 
   /**
    * Get circuit breaker failures
    */
-  getCircuitBreakerFailures(): number;
+  getCircuitBreakerFailures(): number
 
   /**
    * Clear URL cache
    */
-  clearURLCache(): void;
+  clearURLCache(): void
 }
 
 /**
  * Gateway-specific proxy factory function return type
  */
 export interface ProxyInstance {
-  proxy: ProxyHandler["proxy"];
-  close: ProxyHandler["close"];
-  getCircuitBreakerState: ProxyHandler["getCircuitBreakerState"];
-  getCircuitBreakerFailures: ProxyHandler["getCircuitBreakerFailures"];
-  clearURLCache: ProxyHandler["clearURLCache"];
+  proxy: ProxyHandler['proxy']
+  close: ProxyHandler['close']
+  getCircuitBreakerState: ProxyHandler['getCircuitBreakerState']
+  getCircuitBreakerFailures: ProxyHandler['getCircuitBreakerFailures']
+  clearURLCache: ProxyHandler['clearURLCache']
 }
