@@ -10,7 +10,7 @@ import type {
 } from '../interfaces/load-balancer'
 import type { Logger } from '../interfaces/logger'
 import { defaultLogger } from '../logger/pino-logger'
-import * as crypto from 'crypto';
+import * as crypto from 'crypto'
 
 /**
  * Internal target with additional tracking data
@@ -422,9 +422,9 @@ export class HttpLoadBalancer implements LoadBalancer {
   }
 
   private generateSessionId(): string {
-    const randomPart = crypto.randomBytes(16).toString('hex'); // 16 bytes = 32 hex characters
-    const timestampPart = Date.now().toString(36);
-    return randomPart + timestampPart;
+    const randomPart = crypto.randomBytes(16).toString('hex') // 16 bytes = 32 hex characters
+    const timestampPart = Date.now().toString(36)
+    return randomPart + timestampPart
   }
 
   private getClientId(request: Request): string {
