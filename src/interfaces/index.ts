@@ -1,8 +1,8 @@
 // Core Gateway Interface
-export type { Gateway, GatewayConfig } from "./gateway.ts";
+export type { Gateway, GatewayConfig } from './gateway'
 
 // Route Management
-export type { RouteConfig } from "./route.ts";
+export type { RouteConfig } from './route'
 
 // Middleware System
 export type {
@@ -35,7 +35,7 @@ export type {
   Trouter,
   Pattern,
   Methods,
-} from "./middleware.ts";
+} from './middleware'
 
 // Proxy Functionality
 export type {
@@ -54,14 +54,19 @@ export type {
   FetchGateCircuitBreaker,
   ProxyLogger,
   LogContext,
-} from "./proxy.ts";
-export type { CircuitState } from "./proxy.ts";
+} from './proxy'
+export type { CircuitState } from './proxy'
 
 // Rate Limiting
 // Rate limiting - now using 0http-bun's built-in rate limiter
 
 // Load Balancing
-export type { LoadBalancer, LoadBalancerConfig, LoadBalancerTarget, LoadBalancerStats } from "./load-balancer.ts";
+export type {
+  LoadBalancer,
+  LoadBalancerConfig,
+  LoadBalancerTarget,
+  LoadBalancerStats,
+} from './load-balancer'
 
 // Logging
-export type { Logger, LoggerConfig, LogEntry } from "./logger.ts";
+export type { Logger, LoggerConfig, LogEntry } from './logger'
