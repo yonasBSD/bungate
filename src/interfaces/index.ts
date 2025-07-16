@@ -1,5 +1,5 @@
 // Core Gateway Interface
-export type { Gateway, GatewayConfig } from './gateway'
+export type { Gateway, GatewayConfig, ClusterConfig } from './gateway'
 
 // Route Management
 export type { RouteConfig } from './route'

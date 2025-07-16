@@ -1,6 +1,8 @@
 {
   "name": "bungate",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "license": "MIT",
+  "description": "A high-performance HTTP gateway for Bun, designed for microservices and API gateways.",
   "scripts": {
     "test": "bun test",
     "test:integration": "bun test test/integration.test.ts",
@@ -28,6 +30,10 @@
   ],
   "peerDependencies": {
     "typescript": "^5.8.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BackendStack21/bungate.git"
   },
   "dependencies": {
     "0http-bun": "^1.2.2",

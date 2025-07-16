@@ -26,6 +26,7 @@ import {
 import { createGatewayProxy } from '../proxy/gateway-proxy'
 import { HttpLoadBalancer } from '../load-balancer/http-load-balancer'
 import type { ProxyInstance } from '../interfaces/proxy'
+import { ClusterManager } from '../cluster/cluster-manager'
 
 export class BunGateway implements Gateway {
   private config: GatewayConfig
@@ -33,9 +34,21 @@ export class BunGateway implements Gateway {
   private server: Server | null = null
   private proxies: Map<string, ProxyInstance> = new Map()
   private loadBalancers: Map<string, HttpLoadBalancer> = new Map()
+  private clusterManager: ClusterManager | null = null
+  private isClusterMaster: boolean = false
 
   constructor(config: GatewayConfig = {}) {
     this.config = config
+    this.isClusterMaster = !process.env.CLUSTER_WORKER
+
+    // Initialize cluster manager if cluster mode is enabled and we're the master
+    if (this.config.cluster?.enabled && this.isClusterMaster) {
+      this.clusterManager = new ClusterManager(
+        this.config.cluster,
+        this.config.logger,
+        process.argv[1],
+      )
+    }
 
     // Create 0http-bun router with configuration
     const routerConfig: IRouterConfig = {
@@ -372,14 +385,43 @@ export class BunGateway implements Gateway {
 
   async listen(port?: number): Promise<Server> {
     const listenPort = port || this.config.server?.port || 3000
+
+    // If cluster mode is enabled and we're the master, start the cluster
+    if (this.clusterManager && this.isClusterMaster) {
+      this.config.logger?.info('Starting cluster manager')
+      await this.clusterManager.start()
+
+      // Master process doesn't serve requests directly in cluster mode
+      // Instead, it manages worker processes
+      return new Promise(() => {}) as Promise<Server>
+    }
+
+    // Worker process or single process mode
     this.server = Bun.serve({
       port: listenPort,
       fetch: this.fetch,
+      // Enable port sharing for cluster mode
+      reusePort: !!process.env.CLUSTER_WORKER,
     })
+
+    if (process.env.CLUSTER_WORKER) {
+      this.config.logger?.info(
+        `Worker ${process.env.CLUSTER_WORKER_ID} listening on port ${listenPort}`,
+      )
+    } else {
+      this.config.logger?.info(`Server listening on port ${listenPort}`)
+    }
+
     return this.server
   }
 
   async close(): Promise<void> {
+    if (this.clusterManager && this.isClusterMaster) {
+      // In cluster mode, the cluster manager handles shutdown
+      // This will be handled by the cluster manager's signal handlers
+      return
+    }
+
     if (this.server) {
       this.server.stop()
       this.server = null

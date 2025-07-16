@@ -1,0 +1,12 @@
+FROM oven/bun:1.2.18-slim
+
+WORKDIR /app
+
+# Create a simple echo server directly without dependencies
+COPY benchmark/echo-server-simple.ts ./echo-server.ts
+
+# Expose port
+EXPOSE 8080
+
+# Run the echo server
+CMD ["bun", "run", "echo-server.ts"]

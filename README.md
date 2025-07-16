@@ -20,6 +20,8 @@
 - **📊 Observable**: Built-in metrics, logging, and monitoring
 - **🔧 Extensible**: Powerful middleware system for custom logic
 
+> See Benchmarks comparing BunGate with Nginx and Envoy in the [benchmark directory](./benchmark).
+
 ## 🚀 Quick Start
 
 Get up and running in less than 60 seconds:
@@ -82,16 +84,18 @@ console.log('🚀 BunGate running on http://localhost:3000')
 - ✅ Rate limiting
 - ✅ Circuit breaker protection
 - ✅ Prometheus metrics
+- ✅ Cluster mode support
 - ✅ Structured logging
 
 ## 🌟 Key Features
 
 ### 🚀 **Performance & Scalability**
 
-- **High Throughput**: Handle 100K+ requests per second
-- **Low Latency**: Sub-millisecond response times
+- **High Throughput**: Handle thousands of requests per second
+- **Low Latency**: Low latency routing with minimal overhead
 - **Memory Efficient**: Optimized for high-concurrent workloads
 - **Auto-scaling**: Dynamic target management and health monitoring
+- **Cluster Mode**: Multi-process clustering for maximum CPU utilization
 
 ### 🎯 **Load Balancing Strategies**
 
@@ -106,9 +110,7 @@ console.log('🚀 BunGate running on http://localhost:3000')
 
 - **Circuit Breaker Pattern**: Automatic failure detection and recovery
 - **Health Checks**: Active monitoring with custom validation
-- **Auto-failover**: Seamless traffic rerouting on failures
-- **Retry Logic**: Configurable retry policies with exponential backoff
-- **Timeout Management**: Request-level and global timeout controls
+- **Timeout Management**: Route-level timeout controls
 
 ### 🔧 **Advanced Features**
 
@@ -191,6 +193,48 @@ gateway.addRoute({
     },
   },
 })
+```
+
+### 🔄 **High-Performance Cluster Mode**
+
+Scale horizontally with multi-process clustering:
+
+```typescript
+import { BunGateway } from 'bungate'
+
+const gateway = new BunGateway({
+  server: { port: 3000 },
+  cluster: {
+    enabled: true,
+    workers: 4, // Number of worker processes
+    restartWorkers: true,
+    maxRestarts: 10,
+    shutdownTimeout: 30000,
+  },
+})
+
+// High-traffic API endpoints
+gateway.addRoute({
+  pattern: '/api/v1/*',
+  loadBalancer: {
+    targets: [
+      { url: 'http://api-server-1:8080', weight: 2 },
+      { url: 'http://api-server-2:8080', weight: 2 },
+      { url: 'http://api-server-3:8080', weight: 1 },
+    ],
+    strategy: 'least-connections',
+    healthCheck: {
+      enabled: true,
+      interval: 5000,
+      timeout: 2000,
+      path: '/health',
+    },
+  },
+})
+
+// Start cluster
+await gateway.listen(3000)
+console.log('Cluster started with 4 workers')
 ```
 
 ### 🔄 **Advanced Load Balancing**

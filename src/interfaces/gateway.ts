@@ -10,6 +10,51 @@ import type { ProxyOptions } from './proxy'
 import type { Logger } from './logger'
 
 /**
+ * Cluster configuration interface
+ */
+export interface ClusterConfig {
+  /**
+   * Enable cluster mode
+   */
+  enabled?: boolean
+
+  /**
+   * Number of workers (defaults to CPU count)
+   */
+  workers?: number
+
+  /**
+   * Restart workers on exit
+   */
+  restartWorkers?: boolean
+
+  /**
+   * Maximum number of restart attempts per worker
+   */
+  maxRestarts?: number
+
+  /**
+   * Delay between restart attempts (in milliseconds)
+   */
+  restartDelay?: number
+
+  /**
+   * Graceful shutdown timeout (in milliseconds)
+   */
+  shutdownTimeout?: number
+
+  /**
+   * Worker respawn threshold (if worker dies more than this many times in respawnThreshold time, don't respawn)
+   */
+  respawnThreshold?: number
+
+  /**
+   * Worker respawn threshold time window (in milliseconds)
+   */
+  respawnThresholdTime?: number
+}
+
+/**
  * Gateway configuration interface
  */
 export interface GatewayConfig {
@@ -21,6 +66,11 @@ export interface GatewayConfig {
     hostname?: string
     development?: boolean
   }
+
+  /**
+   * Cluster configuration
+   */
+  cluster?: ClusterConfig
 
   /**
    * Default route handler (404 handler)

@@ -1,0 +1,17 @@
+FROM oven/bun:1.2.18-slim
+
+WORKDIR /app
+
+# Copy package.json and install dependencies first
+COPY package.json ./
+RUN bun install --production
+
+# Copy the gateway file
+COPY ./../src ./src
+COPY benchmark/bungate-gateway.ts ./gateway.ts
+
+# Expose port
+EXPOSE 3000
+
+# Run the bungate gateway
+CMD ["bun", "run", "gateway.ts"]
