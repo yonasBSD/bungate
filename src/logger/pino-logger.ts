@@ -1,17 +1,53 @@
 /**
- * Pino-based logger implementation for BunGate
+ * Production-Grade Pino Logger Implementation for Bungate
+ *
+ * A high-performance, structured logging solution built on Pino with gateway-specific
+ * enhancements for request tracing, performance monitoring, and operational visibility.
+ *
+ * Features:
+ * - Ultra-fast JSON logging with minimal overhead
+ * - Structured request/response logging with correlation IDs
+ * - Performance metrics and timing information
+ * - Configurable log levels and output formats
+ * - Support for file, console, and custom output destinations
+ * - Child logger creation for contextual logging
+ * - Health check and load balancing event logging
+ * - Integration with monitoring and alerting systems
+ *
+ * @example
+ * ```ts
+ * const logger = new BunGateLogger({
+ *   level: 'info',
+ *   format: 'json',
+ *   enableRequestLogging: true,
+ *   enableMetrics: true
+ * })
+ *
+ * logger.info('Gateway started', { port: 3000, version: '1.0.0' })
+ * logger.logRequest(request, response, 150)
+ * ```
  */
 import pino from 'pino'
 import type { LoggerOptions, Logger as PinoLogger } from 'pino'
 import type { Logger, LoggerConfig } from '../interfaces/logger'
 
 /**
- * Enhanced logger that wraps Pino with BunGate-specific functionality
+ * Enhanced Pino logger with gateway-specific functionality
+ *
+ * Provides structured logging, request tracing, and performance monitoring
+ * optimized for high-throughput API gateway operations.
  */
 export class BunGateLogger implements Logger {
+  /** Direct access to underlying Pino logger for advanced usage */
   readonly pino: PinoLogger
+  /** Logger configuration with gateway-specific options */
   private config: LoggerConfig
 
+  /**
+   * Initialize the logger with comprehensive configuration
+   *
+   * @param config - Logger configuration including level, format, and output options
+   */
   constructor(config: LoggerConfig = {}) {
     this.config = {
       level: 'info',
@@ -21,13 +57,13 @@ export class BunGateLogger implements Logger {
       ...config,
     }
 
-    // Create Pino logger with configuration
+    // Configure Pino logger with gateway-optimized settings
     const pinoConfig: any = {
       level: this.config.level,
       ...config,
     }
 
-    // Set up pretty printing if requested
+    // Configure pretty printing for development
     if (this.config.format === 'pretty') {
       pinoConfig.transport = {
         target: 'pino-pretty',
@@ -39,7 +75,7 @@ export class BunGateLogger implements Logger {
       }
     }
 
-    // Set up file output if requested
+    // Configure file output for production logging
     if (this.config.output === 'file' && this.config.filePath) {
       pinoConfig.transport = {
         target: 'pino/file',

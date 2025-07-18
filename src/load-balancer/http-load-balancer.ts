@@ -1,6 +1,31 @@
 /**
- * Load balancer implementation using basic JavaScript structures
- * Supports multiple strategies: round-robin, least-connections, weighted, random, ip-hash
+ * HTTP Load Balancer Implementation
+ *
+ * A high-performance load balancer that distributes incoming requests across multiple
+ * backend targets using various strategies. Supports health checking, sticky sessions,
+ * and comprehensive monitoring for production-grade API gateway deployments.
+ *
+ * Features:
+ * - Multiple load balancing strategies (round-robin, least-connections, weighted, random, ip-hash)
+ * - Automatic health checking with configurable intervals and validation
+ * - Sticky session support for session affinity
+ * - Real-time statistics and monitoring
+ * - Circuit breaker pattern for fault tolerance
+ * - Comprehensive logging and observability
+ *
+ * @example
+ * ```ts
+ * const loadBalancer = new HttpLoadBalancer({
+ *   strategy: 'least-connections',
+ *   targets: [
+ *     { url: 'http://service1:3000', weight: 2 },
+ *     { url: 'http://service2:3000', weight: 1 }
+ *   ],
+ *   healthCheck: { enabled: true, interval: 30000, path: '/health' }
+ * })
+ *
+ * const target = loadBalancer.selectTarget(request)
+ * ```
  */
 import type {
   LoadBalancer,
@@ -13,37 +38,62 @@ import { defaultLogger } from '../logger/pino-logger'
 import * as crypto from 'crypto'
 
 /**
- * Internal target with additional tracking data
+ * Internal target representation with runtime tracking data
+ * Extends the base LoadBalancerTarget with operational metrics
  */
 interface InternalTarget extends LoadBalancerTarget {
+  /** Number of requests routed to this target */
   requests: number
+  /** Number of failed requests to this target */
   errors: number
+  /** Cumulative response time for average calculation */
   totalResponseTime: number
+  /** Timestamp of last request to this target */
   lastUsed: number
 }
 
 /**
- * Session tracking for sticky sessions
+ * Session tracking for sticky session functionality
+ * Maintains client-to-target affinity for stateful applications
  */
 interface Session {
+  /** Target URL this session is bound to */
   targetUrl: string
+  /** Session creation timestamp */
   createdAt: number
+  /** Session expiration timestamp */
   expiresAt: number
 }
 
 /**
- * Load balancer implementation
+ * Production-ready HTTP Load Balancer Implementation
+ *
+ * Provides intelligent request distribution across multiple backend services
+ * with enterprise-grade features for high-availability deployments.
  */
 export class HttpLoadBalancer implements LoadBalancer {
+  /** Map of target URLs to their internal tracking data */
   private targets = new Map<string, InternalTarget>()
+  /** Load balancer configuration */
   private config: LoadBalancerConfig
-  private currentIndex = 0 // For round-robin
+  /** Current index for round-robin strategy */
+  private currentIndex = 0
+  /** Total number of requests processed */
   private totalRequests = 0
+  /** Health check interval timer */
   private healthCheckInterval?: Timer
-  private sessions = new Map<string, Session>() // For sticky sessions
+  /** Session tracking for sticky sessions */
+  private sessions = new Map<string, Session>()
+  /** Session cleanup interval timer */
   private sessionCleanupInterval?: Timer
+  /** Logger instance for monitoring and debugging */
   private logger: Logger
 
+  /**
+   * Initialize the load balancer with configuration and start background services
+   *
+   * @param config - Load balancer configuration including strategy, targets, and options
+   */
   constructor(config: LoadBalancerConfig) {
     this.config = { ...config }
     this.logger = config.logger ?? defaultLogger
@@ -55,24 +105,39 @@ export class HttpLoadBalancer implements LoadBalancer {
       stickySessionEnabled: config.stickySession?.enabled,
     })
 
-    // Initialize targets
+    // Initialize all configured targets
     for (const target of config.targets) {
       this.addTarget(target)
     }
 
-    // Start health checks if enabled
+    // Start health monitoring if enabled
     if (config.healthCheck?.enabled) {
       this.startHealthChecks()
     }
 
-    // Start session cleanup if sticky sessions enabled
+    // Start session management if sticky sessions are enabled
     if (config.stickySession?.enabled) {
       this.startSessionCleanup()
     }
   }
 
   /**
-   * Select next target based on strategy
+   * Select the optimal target for the incoming request
+   *
+   * Uses the configured load balancing strategy to distribute requests intelligently
+   * across healthy targets. Supports sticky sessions for session affinity.
+   *
+   * @param request - The incoming HTTP request to route
+   * @returns Selected target or null if no healthy targets available
+   *
+   * @example
+   * ```ts
+   * const target = loadBalancer.selectTarget(request)
+   * if (target) {
+   *   // Forward request to target.url
+   *   const response = await fetch(`${target.url}${request.url}`)
+   * }
+   * ```
    */
   selectTarget(request: Request): LoadBalancerTarget | null {
     const startTime = Date.now()
@@ -149,7 +214,21 @@ export class HttpLoadBalancer implements LoadBalancer {
   }
 
   /**
-   * Add a target to the load balancer
+   * Add a new target to the load balancer pool
+   *
+   * Initializes tracking data and makes the target available for request routing.
+   * Can be used for dynamic scaling by adding targets at runtime.
+   *
+   * @param target - Target configuration to add
+   *
+   * @example
+   * ```ts
+   * loadBalancer.addTarget({
+   *   url: 'http://new-service:3000',
+   *   weight: 2,
+   *   metadata: { region: 'us-west-2' }
+   * })
+   * ```
    */
   addTarget(target: LoadBalancerTarget): void {
     const internalTarget: InternalTarget = {
@@ -167,14 +246,37 @@ export class HttpLoadBalancer implements LoadBalancer {
   }
 
   /**
-   * Remove a target from the load balancer
+   * Remove a target from the load balancer pool
+   *
+   * Immediately stops routing requests to the specified target.
+   * Useful for maintenance, scaling down, or handling failed services.
+   *
+   * @param url - Target URL to remove from the pool
+   *
+   * @example
+   * ```ts
+   * // Remove a failed service
+   * loadBalancer.removeTarget('http://failed-service:3000')
+   * ```
    */
   removeTarget(url: string): void {
     this.targets.delete(url)
   }
 
   /**
-   * Update target health status
+   * Update the health status of a specific target
+   *
+   * Called by health checks or external monitoring systems to mark
+   * targets as healthy or unhealthy, affecting routing decisions.
+   *
+   * @param url - Target URL to update
+   * @param healthy - New health status
+   *
+   * @example
+   * ```ts
+   * // Mark a target as unhealthy after circuit breaker opens
+   * loadBalancer.updateTargetHealth('http://service:3000', false)
+   * ```
    */
   updateTargetHealth(url: string, healthy: boolean): void {
     const target = this.targets.get(url)
@@ -185,21 +287,43 @@ export class HttpLoadBalancer implements LoadBalancer {
   }
 
   /**
-   * Get all targets
+   * Get all configured targets with their current status
+   *
+   * Returns complete target information including health status,
+   * connection counts, and performance metrics.
+   *
+   * @returns Array of all targets with runtime data
    */
   getTargets(): LoadBalancerTarget[] {
     return Array.from(this.targets.values())
   }
 
   /**
-   * Get healthy targets only
+   * Get only healthy targets available for routing
+   *
+   * Filters out unhealthy targets that should not receive traffic.
+   * Used internally by routing strategies and externally for monitoring.
+   *
+   * @returns Array of healthy targets ready to handle requests
    */
   getHealthyTargets(): LoadBalancerTarget[] {
     return Array.from(this.targets.values()).filter((target) => target.healthy)
   }
 
   /**
-   * Get load balancer statistics
+   * Get comprehensive load balancer statistics
+   *
+   * Provides operational metrics for monitoring, alerting, and capacity planning.
+   * Includes per-target statistics and overall performance data.
+   *
+   * @returns Statistics object with performance and health metrics
+   *
+   * @example
+   * ```ts
+   * const stats = loadBalancer.getStats()
+   * console.log(`Total requests: ${stats.totalRequests}`)
+   * console.log(`Healthy targets: ${stats.healthyTargets}/${stats.totalTargets}`)
+   * ```
    */
   getStats(): LoadBalancerStats {
     const targetStats: Record<string, any> = {}
