@@ -1,6 +1,7 @@
 /**
  * Import and re-export fetch-gate types directly from the package
- * This ensures 100% compatibility and eliminates duplication
+ * This ensures 100% compatibility with fetch-gate while providing
+ * enhanced TypeScript support for proxy functionality in the gateway
  */
 import type {
   ProxyOptions,
@@ -46,11 +47,23 @@ import type { ZeroRequest } from './middleware'
 
 /**
  * Gateway-specific proxy handler interface
- * Extends fetch-gate functionality with ZeroRequest support
+ * Extends fetch-gate functionality with enhanced ZeroRequest support
+ * and gateway-specific features for request forwarding
  */
 export interface ProxyHandler {
   /**
-   * Proxy a request to target (gateway-specific with ZeroRequest)
+   * Proxy a request to a target service
+   * @param req - The gateway request object with enhanced context
+   * @param source - Target URL or service identifier
+   * @param opts - Additional proxy options for this request
+   * @returns Promise resolving to the proxied response
+   * @example
+   * ```ts
+   * const response = await proxy.proxy(req, 'http://user-service:3000', {
+   *   timeout: 5000,
+   *   headers: { 'X-Gateway': 'bungate' }
+   * })
+   * ```
    */
   proxy(
     req: ZeroRequest,
@@ -59,33 +72,43 @@ export interface ProxyHandler {
   ): Promise<Response>
 
   /**
-   * Close proxy instance
+   * Gracefully close the proxy instance
+   * Cleans up resources and closes any open connections
    */
   close(): void
 
   /**
-   * Get circuit breaker state
+   * Get the current circuit breaker state for monitoring
+   * @returns Current circuit state (CLOSED, OPEN, HALF_OPEN)
    */
   getCircuitBreakerState(): CircuitState
 
   /**
-   * Get circuit breaker failures
+   * Get the number of consecutive failures in the circuit breaker
+   * @returns Number of failures that contributed to circuit breaker state
    */
   getCircuitBreakerFailures(): number
 
   /**
-   * Clear URL cache
+   * Clear the internal URL cache for DNS and connection pooling
+   * Useful for forcing reconnection to updated services
    */
   clearURLCache(): void
 }
 
 /**
  * Gateway-specific proxy factory function return type
+ * Provides a simplified interface for proxy operations
  */
 export interface ProxyInstance {
+  /** Proxy method for request forwarding */
   proxy: ProxyHandler['proxy']
+  /** Close method for cleanup */
   close: ProxyHandler['close']
+  /** Circuit breaker state inspection */
   getCircuitBreakerState: ProxyHandler['getCircuitBreakerState']
+  /** Circuit breaker failure count */
   getCircuitBreakerFailures: ProxyHandler['getCircuitBreakerFailures']
+  /** URL cache management */
   clearURLCache: ProxyHandler['clearURLCache']
 }

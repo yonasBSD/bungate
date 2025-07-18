@@ -1,24 +1,81 @@
+/**
+ * High-Availability Cluster Manager for Bungate
+ *
+ * Manages multiple worker processes for horizontal scaling and fault tolerance.
+ * Provides automatic worker spawning, health monitoring, graceful restarts,
+ * and load distribution across CPU cores for maximum performance.
+ *
+ * Features:
+ * - Automatic worker process management and scaling
+ * - Intelligent restart policies with backoff strategies
+ * - Graceful shutdown with connection draining
+ * - Real-time health monitoring and failure detection
+ * - Zero-downtime deployments with rolling restarts
+ * - Resource monitoring and performance optimization
+ * - Signal-based management (SIGINT, SIGTERM, SIGUSR2)
+ * - Comprehensive logging and operational visibility
+ *
+ * @example
+ * ```ts
+ * const clusterManager = new ClusterManager({
+ *   workers: 4,
+ *   restartWorkers: true,
+ *   maxRestarts: 10,
+ *   shutdownTimeout: 30000
+ * }, logger, './worker.js')
+ *
+ * await clusterManager.start()
+ * ```
+ */
+
 import { spawn, type Subprocess } from 'bun'
 import { cpus } from 'os'
 import type { Logger } from '../interfaces/logger'
 import type { ClusterConfig } from '../interfaces/gateway'
 
+/**
+ * Worker process information for tracking and management
+ */
 export interface WorkerInfo {
+  /** Unique worker identifier */
   id: number
+  /** Bun subprocess instance */
   process: Subprocess
+  /** Number of times this worker has been restarted */
   restarts: number
+  /** Timestamp of last restart attempt */
   lastRestartTime: number
+  /** Flag indicating worker is in shutdown process */
   isExiting: boolean
 }
 
+/**
+ * Production-grade cluster manager for multi-process deployments
+ *
+ * Orchestrates worker processes with intelligent health monitoring,
+ * automatic recovery, and zero-downtime deployment capabilities.
+ */
 export class ClusterManager {
+  /** Cluster configuration with scaling and restart policies */
   private config: ClusterConfig
+  /** Logger instance for operational monitoring */
   private logger?: Logger
+  /** Map of active worker processes */
   private workers: Map<number, WorkerInfo> = new Map()
+  /** Counter for generating unique worker IDs */
   private nextWorkerId = 1
+  /** Flag indicating cluster shutdown in progress */
   private isShuttingDown = false
+  /** Path to worker script for spawning processes */
   private workerScript: string
 
+  /**
+   * Initialize cluster manager with configuration and dependencies
+   *
+   * @param config - Cluster configuration including worker count and restart policies
+   * @param logger - Logger instance for monitoring and debugging
+   * @param workerScript - Path to worker script to execute
+   */
   constructor(config: ClusterConfig, logger?: Logger, workerScript?: string) {
     this.config = {
       enabled: true,
@@ -35,6 +92,14 @@ export class ClusterManager {
     this.workerScript = workerScript || process.argv[1] || 'worker.js'
   }
 
+  /**
+   * Start the cluster with configured worker processes
+   *
+   * Spawns worker processes, sets up signal handlers, and begins health monitoring.
+   * Provides graceful startup with proper error handling and logging.
+   *
+   * @returns Promise that resolves when cluster is fully operational
+   */
   async start(): Promise<void> {
     if (!this.config.enabled) {
       this.logger?.info('Cluster mode disabled')
@@ -43,7 +108,7 @@ export class ClusterManager {
 
     this.logger?.info(`Starting cluster with ${this.config.workers} workers`)
 
-    // Set up signal handlers
+    // Configure signal handlers for graceful lifecycle management
     process.on('SIGINT', this.gracefulShutdown.bind(this))
     process.on('SIGTERM', this.gracefulShutdown.bind(this))
     process.on('SIGUSR2', this.restartAllWorkers.bind(this))

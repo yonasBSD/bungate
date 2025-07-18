@@ -1,3 +1,39 @@
+/**
+ * Bungate API Gateway Implementation
+ *
+ * A high-performance, production-ready API gateway built on Bun runtime with 0http-bun router.
+ * Provides comprehensive routing, middleware support, load balancing, and proxy capabilities
+ * for microservices architectures and API management.
+ *
+ * Key Features:
+ * - Ultra-fast HTTP routing with parameter and wildcard support
+ * - Built-in load balancing with multiple strategies
+ * - Circuit breaker pattern for fault tolerance
+ * - JWT authentication and CORS support
+ * - Request/response transformation and validation
+ * - Comprehensive logging and metrics collection
+ * - Multi-process clustering for high availability
+ * - Hot reload and graceful shutdown capabilities
+ *
+ * @example
+ * ```ts
+ * const gateway = new BunGateway({
+ *   server: { port: 3000 },
+ *   routes: [
+ *     {
+ *       pattern: '/api/users/*',
+ *       target: 'http://user-service:3000',
+ *       loadBalancer: { strategy: 'round-robin' }
+ *     }
+ *   ],
+ *   cors: { origin: '*' },
+ *   auth: { secret: 'your-jwt-secret' }
+ * })
+ *
+ * await gateway.listen(3000)
+ * ```
+ */
+
 import http from '0http-bun'
 import type { Server } from 'bun'
 import type { Gateway, GatewayConfig } from '../interfaces/gateway'
@@ -28,20 +64,41 @@ import { HttpLoadBalancer } from '../load-balancer/http-load-balancer'
 import type { ProxyInstance } from '../interfaces/proxy'
 import { ClusterManager } from '../cluster/cluster-manager'
 
+/**
+ * Production-grade API Gateway implementation
+ *
+ * Orchestrates request routing, middleware processing, and backend communication
+ * with enterprise features for scalability and reliability.
+ */
 export class BunGateway implements Gateway {
+  /** Gateway configuration including routes, middleware, and server settings */
   private config: GatewayConfig
+  /** 0http-bun router instance for high-performance request routing */
   private router: IRouter
+  /** Bun server instance when using built-in server */
   private server: Server | null = null
+  /** Map of route patterns to their proxy instances */
   private proxies: Map<string, ProxyInstance> = new Map()
+  /** Map of route patterns to their load balancer instances */
   private loadBalancers: Map<string, HttpLoadBalancer> = new Map()
+  /** Cluster manager for multi-process deployments */
   private clusterManager: ClusterManager | null = null
+  /** Flag indicating if this process is the cluster master */
   private isClusterMaster: boolean = false
 
+  /**
+   * Initialize the API Gateway with comprehensive configuration
+   *
+   * Sets up routing, middleware chain, clustering, and backend services.
+   * Automatically configures load balancers and proxy instances for defined routes.
+   *
+   * @param config - Gateway configuration object with routes, middleware, and server options
+   */
   constructor(config: GatewayConfig = {}) {
     this.config = config
     this.isClusterMaster = !process.env.CLUSTER_WORKER
 
-    // Initialize cluster manager if cluster mode is enabled and we're the master
+    // Initialize cluster manager for multi-process deployment
     if (this.config.cluster?.enabled && this.isClusterMaster) {
       this.clusterManager = new ClusterManager(
         this.config.cluster,

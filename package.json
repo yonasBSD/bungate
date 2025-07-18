@@ -3,6 +3,16 @@
   "version": "0.2.0",
   "license": "MIT",
   "description": "A high-performance HTTP gateway for Bun, designed for microservices and API gateways.",
+  "keywords": [
+    "javascript",
+    "typescript",
+    "bun",
+    "gateway",
+    "microservices",
+    "api-gateway",
+    "http",
+    "performance"
+  ],
   "scripts": {
     "test": "bun test",
     "test:integration": "bun test test/integration.test.ts",

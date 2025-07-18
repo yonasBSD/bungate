@@ -1,4 +1,4 @@
-# 🚀 BunGate
+# 🚀 Bungate
 
 > **The Lightning-Fast HTTP Gateway & Load Balancer for the Modern Web**
 
@@ -7,27 +7,27 @@
 [![Performance](https://img.shields.io/badge/Performance-Blazing%20Fast-orange)](https://github.com/BackendStack21/bungate)
 [![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
 
-**BunGate** is a next-generation HTTP gateway and load balancer that harnesses the incredible speed of Bun.js to deliver unparalleled performance for modern web applications. Built from the ground up with TypeScript, it provides enterprise-grade features with zero-config simplicity.
+**Bungate** is a next-generation HTTP gateway and load balancer that harnesses the incredible speed of Bun to deliver unparalleled performance for modern web applications. Built from the ground up with TypeScript, it provides enterprise-grade features with zero-config simplicity.
 
-## ⚡ Why BunGate?
+## ⚡ Why Bungate?
 
-- **🔥 Blazing Fast**: Built on Bun.js - up to 4x faster than Node.js alternatives
+- **🔥 Blazing Fast**: Built on Bun - up to 4x faster than Node.js alternatives
 - **🎯 Zero Config**: Works out of the box with sensible defaults
-- **🧠 Smart Load Balancing**: 5 supported load balancing algorithms: `round-robin`, `least-connections`, `random`, `weighted`, `ip-hash`
+- **🧠 Smart Load Balancing**: 5 load balancing algorithms: `round-robin`, `least-connections`, `random`, `weighted`, `ip-hash`
 - **🛡️ Production Ready**: Circuit breakers, health checks, and auto-failover
 - **🔐 Built-in Authentication**: JWT, API keys, JWKS, and OAuth2 support out of the box
 - **🎨 Developer Friendly**: Full TypeScript support with intuitive APIs
 - **📊 Observable**: Built-in metrics, logging, and monitoring
 - **🔧 Extensible**: Powerful middleware system for custom logic
 
-> See Benchmarks comparing BunGate with Nginx and Envoy in the [benchmark directory](./benchmark).
+> See benchmarks comparing Bungate with Nginx and Envoy in the [benchmark directory](./benchmark).
 
 ## 🚀 Quick Start
 
 Get up and running in less than 60 seconds:
 
 ```bash
-# Install BunGate
+# Install Bungate
 bun add bungate
 
 # Create your gateway
@@ -47,16 +47,17 @@ const gateway = new BunGateway({
 gateway.addRoute({
   pattern: '/api/*',
   loadBalancer: {
-    targets: [
-      'http://api1.example.com',
-      'http://api2.example.com',
-      'http://api3.example.com',
-    ],
     strategy: 'least-connections',
+    targets: [
+      { url: 'http://api1.example.com' },
+      { url: 'http://api2.example.com' },
+      { url: 'http://api3.example.com' },
+    ],
     healthCheck: {
       enabled: true,
       interval: 30000,
       timeout: 5000,
+      path: '/health',
     },
   },
 })
@@ -74,7 +75,7 @@ gateway.addRoute({
 
 // Start the gateway
 await gateway.listen()
-console.log('🚀 BunGate running on http://localhost:3000')
+console.log('🚀 Bungate running on http://localhost:3000')
 ```
 
 **That's it!** Your high-performance gateway is now handling traffic with:
@@ -92,7 +93,7 @@ console.log('🚀 BunGate running on http://localhost:3000')
 ### 🚀 **Performance & Scalability**
 
 - **High Throughput**: Handle thousands of requests per second
-- **Low Latency**: Low latency routing with minimal overhead
+- **Low Latency**: Minimal overhead routing with optimized request processing
 - **Memory Efficient**: Optimized for high-concurrent workloads
 - **Auto-scaling**: Dynamic target management and health monitoring
 - **Cluster Mode**: Multi-process clustering for maximum CPU utilization
@@ -100,26 +101,28 @@ console.log('🚀 BunGate running on http://localhost:3000')
 ### 🎯 **Load Balancing Strategies**
 
 - **Round Robin**: Equal distribution across all targets
-- **Weighted Round Robin**: Distribute based on server capacity
-- **Least Connections**: Route to least busy server
-- **IP Hash**: Consistent routing based on client IP
+- **Weighted**: Distribute based on server capacity and weights
+- **Least Connections**: Route to the least busy server
+- **IP Hash**: Consistent routing based on client IP for session affinity
 - **Random**: Randomized distribution for even load
-- **Sticky Sessions**: Session affinity with cookie support
+- **Sticky Sessions**: Session affinity with cookie-based persistence
 
 ### 🛡️ **Reliability & Resilience**
 
 - **Circuit Breaker Pattern**: Automatic failure detection and recovery
 - **Health Checks**: Active monitoring with custom validation
-- **Timeout Management**: Route-level timeout controls
+- **Timeout Management**: Route-level and global timeout controls
+- **Auto-failover**: Automatic traffic rerouting on service failures
+- **Graceful Degradation**: Fallback responses and cached data support
 
 ### 🔧 **Advanced Features**
 
 - **Authentication & Authorization**: JWT, API keys, JWKS, OAuth2/OIDC support
-- **Middleware System**: Custom request/response processing
+- **Middleware System**: Custom request/response processing pipeline
 - **Path Rewriting**: URL transformation and routing rules
 - **Rate Limiting**: Flexible rate limiting with custom key generation
 - **CORS Support**: Full cross-origin resource sharing configuration
-- **Request/Response Hooks**: Lifecycle event handling
+- **Request/Response Hooks**: Comprehensive lifecycle event handling
 
 ### 📊 **Monitoring & Observability**
 
@@ -131,11 +134,11 @@ console.log('🚀 BunGate running on http://localhost:3000')
 
 ### 🎨 **Developer Experience**
 
-- **TypeScript First**: Full type safety and IntelliSense
-- **Zero Dependencies**: Minimal footprint with essential features
+- **TypeScript First**: Full type safety and IntelliSense support
+- **Zero Dependencies**: Minimal footprint with essential features only
 - **Hot Reload**: Development mode with automatic restarts
-- **Rich Examples**: Comprehensive documentation and examples
-- **Testing Support**: Built-in testing utilities and mocks
+- **Rich Documentation**: Comprehensive examples and API documentation
+- **Testing Support**: Built-in utilities for testing and development
 
 ## 🏗️ Real-World Examples
 
@@ -189,7 +192,7 @@ gateway.addRoute({
   hooks: {
     onError(req, error): Promise<Response> {
       // Fallback to cached payment status
-      return getCachedPaymentStatus(req.params.id)
+      return getCachedPaymentStatus(req.url)
     },
   },
 })
@@ -246,11 +249,6 @@ Distribute traffic intelligently across multiple backends:
 gateway.addRoute({
   pattern: '/products/*',
   loadBalancer: {
-    targets: [
-      'http://api1.example.com',
-      'http://api2.example.com',
-      'http://api3.example.com',
-    ],
     strategy: 'weighted',
     targets: [
       { url: 'http://products-primary:3000', weight: 70 },
@@ -271,16 +269,11 @@ gateway.addRoute({
 gateway.addRoute({
   pattern: '/app/*',
   loadBalancer: {
-    targets: [
-      'http://api1.example.com',
-      'http://api2.example.com',
-      'http://api3.example.com',
-    ],
     strategy: 'ip-hash',
     targets: [
-      'http://app-server-1:3000',
-      'http://app-server-2:3000',
-      'http://app-server-3:3000',
+      { url: 'http://app-server-1:3000' },
+      { url: 'http://app-server-2:3000' },
+      { url: 'http://app-server-3:3000' },
     ],
     stickySession: {
       enabled: true,
@@ -354,7 +347,7 @@ gateway.addRoute({
 
 ## 🔐 **Built-in Authentication**
 
-BunGate provides comprehensive authentication support out of the box:
+Bungate provides comprehensive authentication support out of the box:
 
 #### JWT Authentication
 
@@ -536,24 +529,9 @@ touch gateway.ts
 import { BunGateway, BunGateLogger } from 'bungate'
 
 const logger = new BunGateLogger({
-  level: 'error',
-  transport: {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      translateTime: 'SYS:standard',
-      ignore: 'pid,hostname',
-    },
-  },
-  serializers: {
-    req: (req) => ({
-      method: req.method,
-      url: req.url,
-    }),
-    res: (res) => ({
-      statusCode: res.status,
-    }),
-  },
+  level: 'info',
+  format: 'pretty',
+  enableRequestLogging: true,
 })
 
 const gateway = new BunGateway({
@@ -585,18 +563,18 @@ gateway.addRoute({
   },
 })
 
-// Add public routes with another layer of authentication
+// Add public routes with API key authentication
 gateway.addRoute({
   pattern: '/api/public/*',
   target: 'http://public-service:3002',
   auth: {
     apiKeys: ['public-key-1', 'public-key-2'],
-    apiKeyHeader: 'x-public-key',
+    apiKeyHeader: 'x-api-key',
   },
 })
 
 await gateway.listen()
-console.log('🚀 BunGate running on http://localhost:3000')
+console.log('🚀 Bungate running on http://localhost:3000')
 ```
 
 ## 📄 License
@@ -607,6 +585,8 @@ MIT Licensed - see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-**Built with ❤️ for the JavaScript Community**
+**Built with ❤️ by BackendStack21 for the JavaScript Community**
+
+[🏠 Homepage](https://github.com/BackendStack21/bungate) | [📚 Documentation](https://github.com/BackendStack21/bungate#readme) | [🐛 Issues](https://github.com/BackendStack21/bungate/issues) | [💬 Discussions](https://github.com/BackendStack21/bungate/discussions)
 
 </div>
