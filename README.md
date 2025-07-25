@@ -9,6 +9,8 @@
 
 **Bungate** is a next-generation HTTP gateway and load balancer that harnesses the incredible speed of Bun to deliver unparalleled performance for modern web applications. Built from the ground up with TypeScript, it provides enterprise-grade features with zero-config simplicity.
 
+<img src="https://raw.githubusercontent.com/BackendStack21/bungate/main/bungate-logo.png" alt="Bungate Logo" width="200"/>
+
 ## ⚡ Why Bungate?
 
 - **🔥 Blazing Fast**: Built on Bun - up to 4x faster than Node.js alternatives
@@ -585,7 +587,7 @@ MIT Licensed - see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-**Built with ❤️ by BackendStack21 for the JavaScript Community**
+**Built with ❤️ by [21no.de](https://21no.de) for the JavaScript Community**
 
 [🏠 Homepage](https://github.com/BackendStack21/bungate) | [📚 Documentation](https://github.com/BackendStack21/bungate#readme) | [🐛 Issues](https://github.com/BackendStack21/bungate/issues) | [💬 Discussions](https://github.com/BackendStack21/bungate/discussions)
 
