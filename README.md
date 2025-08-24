@@ -264,8 +264,8 @@ const cluster = new ClusterManager(
     workers: 4,
     restartWorkers: true,
     restartDelay: 1000, // base delay used for exponential backoff with jitter
-    maxRestarts: 10,    // lifetime cap per worker
-    respawnThreshold: 5,          // sliding window cap
+    maxRestarts: 10, // lifetime cap per worker
+    respawnThreshold: 5, // sliding window cap
     respawnThresholdTime: 60_000, // within this time window
     shutdownTimeout: 30_000,
     // Set to false when embedding in tests to avoid process.exit(0)
@@ -278,9 +278,9 @@ const cluster = new ClusterManager(
 await cluster.start()
 
 // Dynamic scaling
-await cluster.scaleUp(2)     // add 2 workers
-await cluster.scaleDown(1)   // remove 1 worker
-await cluster.scaleTo(6)     // set exact worker count
+await cluster.scaleUp(2) // add 2 workers
+await cluster.scaleDown(1) // remove 1 worker
+await cluster.scaleTo(6) // set exact worker count
 
 // Operational visibility
 console.log(cluster.getWorkerCount())
@@ -297,11 +297,13 @@ cluster.sendSignalToWorker(1, 'SIGHUP')
 ```
 
 Notes:
+
 - Each worker receives `CLUSTER_WORKER=true` and `CLUSTER_WORKER_ID=<n>` environment variables.
 - Restart policy uses exponential backoff with jitter and a sliding window threshold to prevent flapping.
 - Defaults: `shutdownTimeout` 30s, `respawnThreshold` 5 within 60s, `restartDelay` 1s, `maxRestarts` 10.
 
 Configuration reference (cluster):
+
 - `enabled` (boolean): enable multi-process mode
 - `workers` (number): worker process count (defaults to CPU cores)
 - `restartWorkers` (boolean): auto-respawn crashed workers
