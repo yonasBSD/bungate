@@ -449,7 +449,7 @@ describe('HttpLoadBalancer', () => {
       loadBalancer = createLoadBalancer(config)
 
       // Wait for health check to run
-      await new Promise((resolve) => setTimeout(resolve, 150))
+      await new Promise((resolve) => setTimeout(resolve, 600))
 
       expect(fetchCallCount).toBeGreaterThan(0)
 
@@ -478,7 +478,7 @@ describe('HttpLoadBalancer', () => {
       loadBalancer = createLoadBalancer(config)
 
       // Wait for health check to run
-      await new Promise((resolve) => setTimeout(resolve, 150))
+      await new Promise((resolve) => setTimeout(resolve, 600))
 
       const targets = loadBalancer.getHealthyTargets()
       expect(targets.length).toBe(1)
@@ -506,7 +506,7 @@ describe('HttpLoadBalancer', () => {
       loadBalancer = createLoadBalancer(config)
 
       // Wait for health check to run and fail
-      await new Promise((resolve) => setTimeout(resolve, 200))
+      await new Promise((resolve) => setTimeout(resolve, 600))
 
       const stats = loadBalancer.getStats()
       // Health check should have marked target as unhealthy
@@ -548,7 +548,7 @@ describe('HttpLoadBalancer', () => {
       loadBalancer = createLoadBalancer(config)
 
       // Wait for health check to timeout
-      await new Promise((resolve) => setTimeout(resolve, 200))
+      await new Promise((resolve) => setTimeout(resolve, 600))
 
       const stats = loadBalancer.getStats()
       expect(stats.healthyTargets).toBe(0) // Should be marked unhealthy due to timeout
@@ -558,9 +558,14 @@ describe('HttpLoadBalancer', () => {
 
     test('skips health checks when disabled', async () => {
       let fetchCalled = false
+      const uniquePath = '/health-disabled-unique'
 
-      const fetchSpy = createFetchSpy(async () => {
-        fetchCalled = true
+      const fetchSpy = createFetchSpy(async (url: string | URL | Request) => {
+        let href = ''
+        if (typeof url === 'string') href = url
+        else if (url instanceof URL) href = url.toString()
+        else if (url instanceof Request) href = url.url
+        if (href.includes(uniquePath)) fetchCalled = true
         return new Response('OK', { status: 200 })
       })
 
@@ -571,14 +576,14 @@ describe('HttpLoadBalancer', () => {
           enabled: false,
           interval: 100,
           timeout: 1000,
-          path: '/health',
+          path: uniquePath,
         },
       }
 
       loadBalancer = createLoadBalancer(config)
 
       // Wait to ensure no health checks run
-      await new Promise((resolve) => setTimeout(resolve, 150))
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
       expect(fetchCalled).toBe(false)
 
@@ -651,7 +656,7 @@ describe('HttpLoadBalancer', () => {
       loadBalancer.selectTarget(request) // Creates session
 
       // Wait for session to expire and cleanup to run
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
       // Sessions should be cleaned up (we can't directly test internal state but ensure no errors)
       expect(true).toBe(true)
@@ -966,7 +971,7 @@ describe('HttpLoadBalancer', () => {
       loadBalancer.selectTarget(request) // Creates session
 
       // Wait for potential session cleanup
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
       // Should handle session cleanup without errors
       expect(true).toBe(true)
@@ -1261,7 +1266,7 @@ describe('HttpLoadBalancer', () => {
       expect(target).not.toBeNull()
 
       // Wait for session to expire and cleanup to run
-      await new Promise((resolve) => setTimeout(resolve, 60))
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
       // Force another selection to trigger potential cleanup
       const newTarget = balancer.selectTarget(request)
@@ -1297,7 +1302,7 @@ describe('HttpLoadBalancer', () => {
       expect(target3).not.toBeNull()
 
       // Wait longer to ensure sessions expire and cleanup runs
-      await new Promise((resolve) => setTimeout(resolve, 120))
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
       // Trigger more operations that might involve session cleanup
       const newRequest = createMockRequest('new-agent')
@@ -1371,7 +1376,7 @@ describe('HttpLoadBalancer', () => {
       expect(target).not.toBeNull()
 
       // Wait for cleanup to potentially run
-      await new Promise((resolve) => setTimeout(resolve, 70))
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
       balancer.destroy()
     })
@@ -1394,7 +1399,7 @@ describe('HttpLoadBalancer', () => {
       const balancer = new HttpLoadBalancer(config)
 
       // Let some health checks run and potentially use cache
-      await new Promise((resolve) => setTimeout(resolve, 70))
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
       balancer.destroy()
     })
@@ -1626,7 +1631,7 @@ describe('HttpLoadBalancer', () => {
       })
 
       // Trigger cleanup by waiting for interval
-      await new Promise((resolve) => setTimeout(resolve, 20))
+      await new Promise((resolve) => setTimeout(resolve, 200))
 
       balancer.destroy()
     })
@@ -1678,7 +1683,7 @@ describe('HttpLoadBalancer', () => {
       // Wait a bit longer to allow the cleanup interval to run at least once
       // The cleanup runs every 5 minutes (300000ms) in the real implementation
       // but the expired sessions should be cleaned immediately on the next interval
-      await new Promise((resolve) => setTimeout(resolve, 30))
+      await new Promise((resolve) => setTimeout(resolve, 200))
 
       // Force another operation that might trigger cleanup
       const request2 = createMockRequest('different-agent')

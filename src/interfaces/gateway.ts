@@ -63,6 +63,14 @@ export interface ClusterConfig {
    * @default 60000 (1 minute)
    */
   respawnThresholdTime?: number
+
+  /**
+   * Exit the master process after graceful shutdown completes.
+   * Set to false for test environments or embedded runners where exiting the
+   * process is undesirable.
+   * @default true
+   */
+  exitOnShutdown?: boolean
 }
 
 /**

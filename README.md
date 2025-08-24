@@ -242,6 +242,78 @@ await gateway.listen(3000)
 console.log('Cluster started with 4 workers')
 ```
 
+#### Advanced usage: Cluster lifecycle and operations
+
+Bungate’s cluster manager powers zero-downtime restarts, dynamic scaling, and safe shutdowns in production. You can control it via signals or programmatically.
+
+- Zero-downtime rolling restart: send `SIGUSR2` to the master process
+  - The manager spawns a replacement worker first, then gracefully stops the old one
+- Graceful shutdown: send `SIGTERM` or `SIGINT`
+  - Workers receive `SIGTERM` and are given up to `shutdownTimeout` to exit before being force-killed
+
+Programmatic controls (available when using the `ClusterManager` directly):
+
+```ts
+import { ClusterManager, BunGateLogger } from 'bungate'
+
+const logger = new BunGateLogger({ level: 'info' })
+
+const cluster = new ClusterManager(
+  {
+    enabled: true,
+    workers: 4,
+    restartWorkers: true,
+    restartDelay: 1000, // base delay used for exponential backoff with jitter
+    maxRestarts: 10, // lifetime cap per worker
+    respawnThreshold: 5, // sliding window cap
+    respawnThresholdTime: 60_000, // within this time window
+    shutdownTimeout: 30_000,
+    // Set to false when embedding in tests to avoid process.exit(0)
+    exitOnShutdown: true,
+  },
+  logger,
+  './gateway.ts', // worker entry (executed with Bun)
+)
+
+await cluster.start()
+
+// Dynamic scaling
+await cluster.scaleUp(2) // add 2 workers
+await cluster.scaleDown(1) // remove 1 worker
+await cluster.scaleTo(6) // set exact worker count
+
+// Operational visibility
+console.log(cluster.getWorkerCount())
+console.log(cluster.getWorkerInfo()) // includes id, restarts, pid, etc.
+
+// Broadcast a POSIX signal to all workers (e.g., for log-level reloads)
+cluster.broadcastSignal('SIGHUP')
+
+// Target a single worker
+cluster.sendSignalToWorker(1, 'SIGHUP')
+
+// Graceful shutdown (will exit process if exitOnShutdown !== false)
+// await (cluster as any).gracefulShutdown() // internal in gateway use; prefer SIGTERM
+```
+
+Notes:
+
+- Each worker receives `CLUSTER_WORKER=true` and `CLUSTER_WORKER_ID=<n>` environment variables.
+- Restart policy uses exponential backoff with jitter and a sliding window threshold to prevent flapping.
+- Defaults: `shutdownTimeout` 30s, `respawnThreshold` 5 within 60s, `restartDelay` 1s, `maxRestarts` 10.
+
+Configuration reference (cluster):
+
+- `enabled` (boolean): enable multi-process mode
+- `workers` (number): worker process count (defaults to CPU cores)
+- `restartWorkers` (boolean): auto-respawn crashed workers
+- `restartDelay` (ms): base delay for backoff
+- `maxRestarts` (number): lifetime restarts per worker
+- `respawnThreshold` (number): max restarts within time window
+- `respawnThresholdTime` (ms): sliding window size
+- `shutdownTimeout` (ms): grace period before force-kill
+- `exitOnShutdown` (boolean): if true (default), master exits after shutdown; set false in tests/embedded
+
 ### 🔄 **Advanced Load Balancing**
 
 Distribute traffic intelligently across multiple backends:
