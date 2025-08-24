@@ -400,8 +400,11 @@ export class HttpLoadBalancer implements LoadBalancer {
     const target = this.targets.get(url)
     if (target) {
       target.totalResponseTime += responseTime
-      const reqs = target.requests || 1 // avoid division by zero before first selectTarget
-      target.averageResponseTime = target.totalResponseTime / reqs
+      if (target.requests > 0) {
+        target.averageResponseTime = target.totalResponseTime / target.requests
+      } else {
+        target.averageResponseTime = 0
+      }
 
       if (isError) {
         target.errors++
