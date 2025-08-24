@@ -151,6 +151,18 @@ export class HttpLoadBalancer implements LoadBalancer {
       return null
     }
 
+    // Fast path: only one healthy target
+    if (healthyTargets.length === 1) {
+      const only = healthyTargets[0]!
+      this.recordRequest(only.url)
+      this.logger.logLoadBalancing(this.config.strategy, only.url, {
+        reason: 'single-healthy',
+        duration: Date.now() - startTime,
+        healthyTargets: 1,
+      })
+      return only
+    }
+
     // Check for sticky session first
     if (this.config.stickySession?.enabled) {
       const stickyTarget = this.getStickyTarget(request)
@@ -183,6 +195,16 @@ export class HttpLoadBalancer implements LoadBalancer {
           break
         case 'ip-hash':
           selectedTarget = this.selectIpHash(request, healthyTargets)
+          break
+        case 'p2c':
+        case 'power-of-two-choices':
+          selectedTarget = this.selectPowerOfTwoChoices(healthyTargets)
+          break
+        case 'latency':
+          selectedTarget = this.selectByLatency(healthyTargets)
+          break
+        case 'weighted-least-connections':
+          selectedTarget = this.selectWeightedLeastConnections(healthyTargets)
           break
         default:
           selectedTarget = this.selectRoundRobin(healthyTargets)
@@ -378,7 +400,8 @@ export class HttpLoadBalancer implements LoadBalancer {
     const target = this.targets.get(url)
     if (target) {
       target.totalResponseTime += responseTime
-      target.averageResponseTime = target.totalResponseTime / target.requests
+      const reqs = target.requests || 1 // avoid division by zero before first selectTarget
+      target.averageResponseTime = target.totalResponseTime / reqs
 
       if (isError) {
         target.errors++
@@ -478,6 +501,69 @@ export class HttpLoadBalancer implements LoadBalancer {
     return targets[index]! // Guaranteed to exist due to length check
   }
 
+  private selectPowerOfTwoChoices(
+    targets: LoadBalancerTarget[],
+  ): LoadBalancerTarget {
+    // Sample two distinct targets at random and choose the better one by connections then latency
+    const i = Math.floor(Math.random() * targets.length)
+    let j = Math.floor(Math.random() * targets.length)
+    if (j === i) j = (j + 1) % targets.length
+    const a = targets[i]!
+    const b = targets[j]!
+    return this.betterByLoadThenLatency(a, b)
+  }
+
+  private selectByLatency(targets: LoadBalancerTarget[]): LoadBalancerTarget {
+    // Choose the target with the smallest averageResponseTime; fallback to round-robin if missing data
+    let best = targets[0]!
+    let bestLatency = best.averageResponseTime ?? Number.POSITIVE_INFINITY
+    for (let k = 1; k < targets.length; k++) {
+      const t = targets[k]!
+      const lat = t.averageResponseTime ?? Number.POSITIVE_INFINITY
+      if (lat < bestLatency) {
+        best = t
+        bestLatency = lat
+      }
+    }
+    if (!isFinite(bestLatency)) {
+      // No latency data available yet
+      return this.selectRoundRobin(targets)
+    }
+    return best
+  }
+
+  private selectWeightedLeastConnections(
+    targets: LoadBalancerTarget[],
+  ): LoadBalancerTarget {
+    // Choose by minimal (connections + 1) / weight
+    return targets.reduce((best, curr) => {
+      const bestScore =
+        (Math.max(0, best.connections ?? 0) + 1) / Math.max(1, best.weight ?? 1)
+      const currScore =
+        (Math.max(0, curr.connections ?? 0) + 1) / Math.max(1, curr.weight ?? 1)
+      if (currScore < bestScore) return curr
+      if (currScore === bestScore) return this.betterByLatency(best, curr)
+      return best
+    })
+  }
+
+  private betterByLatency(a: LoadBalancerTarget, b: LoadBalancerTarget) {
+    const la = a.averageResponseTime ?? Number.POSITIVE_INFINITY
+    const lb = b.averageResponseTime ?? Number.POSITIVE_INFINITY
+    return la <= lb ? a : b
+  }
+
+  private betterByLoadThenLatency(
+    a: LoadBalancerTarget,
+    b: LoadBalancerTarget,
+  ) {
+    const ca = a.connections ?? 0
+    const cb = b.connections ?? 0
+    if (ca < cb) return a
+    if (cb < ca) return b
+    return this.betterByLatency(a, b)
+  }
+
   private recordRequest(url: string): void {
     this.totalRequests++
     const target = this.targets.get(url)
@@ -552,10 +638,21 @@ export class HttpLoadBalancer implements LoadBalancer {
   }
 
   private getClientId(request: Request): string {
-    // In real scenario, would extract actual client IP
-    // For now, use a combination of headers as identifier
-    const userAgent = request.headers.get('user-agent') ?? ''
-    const accept = request.headers.get('accept') ?? ''
+    // Prefer real client IP headers commonly set by proxies/CDNs; fallback to UA+Accept
+    const headers = request.headers
+    const xff = headers.get('x-forwarded-for') || headers.get('X-Forwarded-For')
+    if (xff) {
+      const ip = xff.split(',')[0]!.trim()
+      if (ip) return ip
+    }
+    const realIp =
+      headers.get('x-real-ip') ||
+      headers.get('cf-connecting-ip') ||
+      headers.get('x-client-ip') ||
+      ''
+    if (realIp) return realIp
+    const userAgent = headers.get('user-agent') ?? ''
+    const accept = headers.get('accept') ?? ''
     return userAgent + accept
   }
 
@@ -596,7 +693,7 @@ export class HttpLoadBalancer implements LoadBalancer {
 
           const response = await fetch(url.toString(), {
             signal: controller.signal,
-            method: 'GET',
+            method: healthCheckConfig.method ?? 'GET',
           })
 
           clearTimeout(timeoutId)

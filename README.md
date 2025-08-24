@@ -15,7 +15,7 @@
 
 - **🔥 Blazing Fast**: Built on Bun - up to 4x faster than Node.js alternatives
 - **🎯 Zero Config**: Works out of the box with sensible defaults
-- **🧠 Smart Load Balancing**: 5 load balancing algorithms: `round-robin`, `least-connections`, `random`, `weighted`, `ip-hash`
+- **🧠 Smart Load Balancing**: Multiple algorithms: `round-robin`, `least-connections`, `random`, `weighted`, `ip-hash`, `p2c` (power-of-two-choices), `latency`, `weighted-least-connections`
 - **🛡️ Production Ready**: Circuit breakers, health checks, and auto-failover
 - **🔐 Built-in Authentication**: JWT, API keys, JWKS, and OAuth2 support out of the box
 - **🎨 Developer Friendly**: Full TypeScript support with intuitive APIs
@@ -107,6 +107,9 @@ console.log('🚀 Bungate running on http://localhost:3000')
 - **Least Connections**: Route to the least busy server
 - **IP Hash**: Consistent routing based on client IP for session affinity
 - **Random**: Randomized distribution for even load
+- **Power of Two Choices (p2c)**: Pick the better of two random targets by load/latency
+- **Latency**: Prefer the target with the lowest average response time
+- **Weighted Least Connections**: Prefer targets with fewer connections normalized by weight
 - **Sticky Sessions**: Session affinity with cookie-based persistence
 
 ### 🛡️ **Reliability & Resilience**

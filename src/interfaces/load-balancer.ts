@@ -69,6 +69,10 @@ export interface LoadBalancerConfig {
     | 'random' // Randomly selects a target
     | 'weighted' // Uses target weights for distribution
     | 'ip-hash' // Routes based on client IP hash for session affinity
+    | 'p2c' // Power of two choices: pick best of two random targets
+    | 'power-of-two-choices' // Alias for p2c
+    | 'latency' // Chooses target with the lowest avg response time
+    | 'weighted-least-connections' // Least connections normalized by weight
 
   /**
    * List of backend targets to load balance across
@@ -113,6 +117,11 @@ export interface LoadBalancerConfig {
      * @example 'OK' or 'healthy'
      */
     expectedBody?: string
+    /**
+     * HTTP method to use for health checks
+     * @default 'GET'
+     */
+    method?: 'GET' | 'HEAD'
   }
 
   /**

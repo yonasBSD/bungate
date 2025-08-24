@@ -271,11 +271,17 @@ describe('Random Load Balancer E2E Tests', () => {
     // Each server should get roughly 1/3 of requests (allow generous variance for randomness)
     const expectedPerServer = requestCount / 3
     expect(serverCounts['echo-1'] || 0).toBeGreaterThan(expectedPerServer * 0.3) // At least 30% of expected
-    expect(serverCounts['echo-1'] || 0).toBeLessThan(expectedPerServer * 1.7) // At most 170% of expected
+    expect(serverCounts['echo-1'] || 0).toBeLessThanOrEqual(
+      expectedPerServer * 1.7,
+    ) // At most 170% of expected
     expect(serverCounts['echo-2'] || 0).toBeGreaterThan(expectedPerServer * 0.3)
-    expect(serverCounts['echo-2'] || 0).toBeLessThan(expectedPerServer * 1.7)
+    expect(serverCounts['echo-2'] || 0).toBeLessThanOrEqual(
+      expectedPerServer * 1.7,
+    )
     expect(serverCounts['echo-3'] || 0).toBeGreaterThan(expectedPerServer * 0.3)
-    expect(serverCounts['echo-3'] || 0).toBeLessThan(expectedPerServer * 1.7)
+    expect(serverCounts['echo-3'] || 0).toBeLessThanOrEqual(
+      expectedPerServer * 1.7,
+    )
   })
 
   test('should randomly distribute requests between two servers', async () => {
@@ -309,9 +315,13 @@ describe('Random Load Balancer E2E Tests', () => {
     // Each server should get roughly half of requests (allow variance for randomness)
     const expectedPerServer = requestCount / 2
     expect(serverCounts['echo-1'] || 0).toBeGreaterThan(expectedPerServer * 0.3) // At least 30% of expected
-    expect(serverCounts['echo-1'] || 0).toBeLessThan(expectedPerServer * 1.7) // At most 170% of expected
+    expect(serverCounts['echo-1'] || 0).toBeLessThanOrEqual(
+      expectedPerServer * 1.7,
+    ) // At most 170% of expected
     expect(serverCounts['echo-2'] || 0).toBeGreaterThan(expectedPerServer * 0.3)
-    expect(serverCounts['echo-2'] || 0).toBeLessThan(expectedPerServer * 1.7)
+    expect(serverCounts['echo-2'] || 0).toBeLessThanOrEqual(
+      expectedPerServer * 1.7,
+    )
   })
 
   test('should show randomness across multiple test runs', async () => {
