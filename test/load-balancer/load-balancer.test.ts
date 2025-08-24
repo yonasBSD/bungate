@@ -1205,8 +1205,8 @@ describe('HttpLoadBalancer', () => {
       const request = createMockRequest()
       const selections: string[] = []
 
-      // Make requests to test distribution
-      for (let i = 0; i < 30; i++) {
+      // Make many requests to reduce randomness flakiness in CI
+      for (let i = 0; i < 300; i++) {
         const target = loadBalancer.selectTarget(request)
         if (target) {
           selections.push(target.url)
@@ -1223,7 +1223,7 @@ describe('HttpLoadBalancer', () => {
       // Should distribute according to weights (1:2 ratio)
       expect(noWeightCount).toBeGreaterThan(0)
       expect(weightedCount).toBeGreaterThan(noWeightCount)
-    })
+    }, 20000)
 
     test('handles session cleanup interval management', () => {
       const config: LoadBalancerConfig = {

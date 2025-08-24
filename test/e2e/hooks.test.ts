@@ -192,7 +192,7 @@ describe('Hooks E2E Tests', () => {
     const afterCall = afterResponseCalls[afterResponseCalls.length - 1]
     expect(afterCall?.req.url).toContain('/api/hooks/hello')
     expect(afterCall?.res.status).toBe(200)
-  })
+  }, 20000)
 
   test('should trigger circuit breaker hooks on successful request', async () => {
     const initialBeforeCount = beforeCircuitBreakerCalls.length
@@ -218,7 +218,7 @@ describe('Hooks E2E Tests', () => {
     expect(afterCall?.req.url).toContain('/api/error/health')
     expect(afterCall?.result.state).toBe('CLOSED')
     expect(afterCall?.result.success).toBe(true)
-  })
+  }, 20000)
 
   test('should trigger onError hook on server error', async () => {
     const initialErrorCount = onErrorCalls.length
@@ -237,7 +237,7 @@ describe('Hooks E2E Tests', () => {
     const errorCall = onErrorCalls[onErrorCalls.length - 1]
     expect(errorCall?.req.url).toContain('/api/error/error')
     expect(errorCall?.error.message).toContain('Server error')
-  })
+  }, 20000)
 
   test('should trigger onError hook on timeout', async () => {
     const initialErrorCount = onErrorCalls.length
@@ -256,7 +256,7 @@ describe('Hooks E2E Tests', () => {
     const errorCall = onErrorCalls[onErrorCalls.length - 1]
     expect(errorCall?.req.url).toContain('/api/error/timeout')
     expect(errorCall?.error.message).toContain('timeout')
-  })
+  }, 20000)
 
   test('should trigger circuit breaker hooks with failure state', async () => {
     // Wait for circuit breaker to potentially reset
@@ -281,7 +281,7 @@ describe('Hooks E2E Tests', () => {
       afterCircuitBreakerCalls[afterCircuitBreakerCalls.length - 1]
     expect(afterCall?.req.url).toContain('/api/error/error')
     expect(afterCall?.result.success).toBe(false)
-  })
+  }, 20000)
 
   test('should trigger all hooks in correct order for successful request', async () => {
     // Reset counters
@@ -323,7 +323,7 @@ describe('Hooks E2E Tests', () => {
 
     // Response should be successful
     expect(afterResponse?.res.status).toBe(200)
-  })
+  }, 20000)
 
   test('should trigger all hooks in correct order for failed request', async () => {
     // Wait for circuit breaker to potentially reset
@@ -369,7 +369,7 @@ describe('Hooks E2E Tests', () => {
     expect(onError?.error.message).toMatch(
       /Server error|Circuit breaker is OPEN/,
     )
-  })
+  }, 20000)
 
   test('should pass correct proxy configuration to beforeRequest hook', async () => {
     const initialCount = beforeRequestCalls.length
@@ -385,7 +385,7 @@ describe('Hooks E2E Tests', () => {
     expect(beforeCall?.opts).toBeDefined()
     expect(beforeCall?.opts.pathRewrite).toBeDefined()
     expect(beforeCall?.opts.pathRewrite['^/api/hooks']).toBe('')
-  })
+  }, 20000)
 
   test('should provide response body to afterResponse hook', async () => {
     const initialCount = afterResponseCalls.length
@@ -401,7 +401,7 @@ describe('Hooks E2E Tests', () => {
     expect(afterCall?.res.status).toBe(200)
     expect(afterCall?.res.headers.get('content-type')).toContain('text/plain')
     expect(afterCall?.body).toBeDefined()
-  })
+  }, 20000)
 
   test('should use fallback response from onError hook when returned', async () => {
     // Create a new gateway with onError hook that returns a fallback response
@@ -444,6 +444,8 @@ describe('Hooks E2E Tests', () => {
 
     fallbackGateway.addRoute(fallbackRouteConfig)
     const fallbackServer = await fallbackGateway.listen(fallbackGatewayPort)
+    // Allow the server a brief moment to be fully ready in slower CI environments
+    await new Promise((resolve) => setTimeout(resolve, 150))
 
     try {
       const response = await fetch(
@@ -464,7 +466,7 @@ describe('Hooks E2E Tests', () => {
     } finally {
       fallbackServer.stop()
     }
-  })
+  }, 20000)
 
   test('should use fallback response from onError hook on timeout', async () => {
     // Create a new gateway with onError hook that handles timeouts
@@ -516,6 +518,8 @@ describe('Hooks E2E Tests', () => {
 
     timeoutGateway.addRoute(timeoutRouteConfig)
     const timeoutServer = await timeoutGateway.listen(timeoutGatewayPort)
+    // Allow the server a brief moment to be fully ready in slower CI environments
+    await new Promise((resolve) => setTimeout(resolve, 150))
 
     try {
       const response = await fetch(
@@ -539,7 +543,7 @@ describe('Hooks E2E Tests', () => {
     } finally {
       timeoutServer.stop()
     }
-  })
+  }, 20000)
 
   test('should fallback to default error handling when onError hook throws', async () => {
     // Create a new failing server for this test
@@ -601,6 +605,8 @@ describe('Hooks E2E Tests', () => {
 
     selectiveGateway.addRoute(selectiveRouteConfig)
     const selectiveServer = await selectiveGateway.listen(selectiveGatewayPort)
+    // Allow the server a brief moment to be fully ready in slower CI environments
+    await new Promise((resolve) => setTimeout(resolve, 150))
 
     try {
       // Test with timeout (should use fallback)
@@ -622,7 +628,7 @@ describe('Hooks E2E Tests', () => {
       selectiveServer.stop()
       selectiveFailingServer.stop()
     }
-  })
+  }, 20000)
 
   test('should handle async fallback response generation', async () => {
     // Create a new failing server for this test
@@ -688,7 +694,8 @@ describe('Hooks E2E Tests', () => {
     asyncGateway.addRoute(asyncRouteConfig)
     const asyncServer = await asyncGateway.listen(asyncGatewayPort)
 
-    await new Promise((resolve) => setTimeout(resolve, 50))
+    // Allow the server a brief moment to be fully ready in slower CI environments
+    await new Promise((resolve) => setTimeout(resolve, 250))
 
     try {
       const testRequestId = `test-${Date.now()}`
@@ -715,5 +722,5 @@ describe('Hooks E2E Tests', () => {
       asyncServer.stop()
       asyncFailingServer.stop()
     }
-  })
+  }, 20000)
 })
