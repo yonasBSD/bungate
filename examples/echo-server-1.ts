@@ -19,7 +19,7 @@ const server = serve({
 
     // Echo endpoint - return request details
 
-    // Add random latency delay (0-500ms)
+    // Add random latency delay (0-200ms)
     const delay = Math.floor(Math.random() * 200)
     await new Promise((resolve) => setTimeout(resolve, delay))
 

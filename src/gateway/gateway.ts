@@ -329,6 +329,8 @@ export class BunGateway implements Gateway {
               }
             }
 
+            // Measure end-to-end time to update latency metrics in the load balancer
+            const startedAt = Date.now()
             increaseTargetConnectionsIfLeastConnections(
               route.loadBalancer?.strategy,
               target,
@@ -347,12 +349,22 @@ export class BunGateway implements Gateway {
                   route.loadBalancer?.strategy,
                   target,
                 )
+                // Update latency stats for strategies like 'latency' and as tie-breakers
+                try {
+                  const duration = Date.now() - startedAt
+                  loadBalancer.recordResponse(target.url, duration, false)
+                } catch {}
               },
               onError: (req: Request, error: Error) => {
                 decreaseTargetConnectionsIfLeastConnections(
                   route.loadBalancer?.strategy,
                   target,
                 )
+                // Record error with latency to penalize target appropriately
+                try {
+                  const duration = Date.now() - startedAt
+                  loadBalancer.recordResponse(target.url, duration, true)
+                } catch {}
                 if (route.hooks?.onError) {
                   route.hooks.onError!(req, error)
                 }
@@ -490,7 +502,13 @@ function increaseTargetConnectionsIfLeastConnections(
   strategy: string | undefined,
   target: any,
 ): void {
-  if (strategy === 'least-connections' && target.connections !== undefined) {
+  if (
+    (strategy === 'least-connections' ||
+      strategy === 'weighted-least-connections' ||
+      strategy === 'p2c' ||
+      strategy === 'power-of-two-choices') &&
+    target.connections !== undefined
+  ) {
     target.connections++
   }
 }
@@ -499,7 +517,13 @@ function decreaseTargetConnectionsIfLeastConnections(
   strategy: string | undefined,
   target: any,
 ): void {
-  if (strategy === 'least-connections' && target.connections !== undefined) {
+  if (
+    (strategy === 'least-connections' ||
+      strategy === 'weighted-least-connections' ||
+      strategy === 'p2c' ||
+      strategy === 'power-of-two-choices') &&
+    target.connections !== undefined
+  ) {
     target.connections--
   }
 }

@@ -42,7 +42,7 @@ const gateway = new BunGateway({
 })
 
 // =============================================================================
-// 1. ROUND ROBIN LOAD BALANCER WITH HEALTH CHECKS
+// ROUND ROBIN LOAD BALANCER WITH HEALTH CHECKS
 // =============================================================================
 console.log('\n1️⃣  Round Robin with Health Checks')
 
@@ -83,7 +83,7 @@ gateway.addRoute({
 })
 
 // =============================================================================
-// 2. WEIGHTED LOAD BALANCER FOR HIGH-PERFORMANCE SCENARIOS
+// WEIGHTED LOAD BALANCER FOR HIGH-PERFORMANCE SCENARIOS
 // =============================================================================
 console.log('2️⃣  Weighted Load Balancer (Performance Optimized)')
 
@@ -151,7 +151,7 @@ gateway.addRoute({
 })
 
 // =============================================================================
-// 4. IP HASH FOR SESSION AFFINITY
+// IP HASH FOR SESSION AFFINITY
 // =============================================================================
 console.log('4️⃣  IP Hash for Session Affinity')
 
@@ -190,7 +190,7 @@ gateway.addRoute({
 })
 
 // =============================================================================
-// 5. RANDOM STRATEGY WITH ADVANCED ERROR HANDLING
+// RANDOM STRATEGY WITH ADVANCED ERROR HANDLING
 // =============================================================================
 console.log('5️⃣  Random Strategy with Advanced Error Handling')
 
@@ -296,7 +296,118 @@ gateway.addRoute({
 })
 
 // =============================================================================
-// 7. MONITORING AND METRICS ENDPOINT
+// POWER OF TWO CHOICES (P2C) STRATEGY
+// =============================================================================
+console.log('6️⃣➕  Power of Two Choices (P2C) Strategy')
+
+gateway.addRoute({
+  pattern: '/api/p2c/*',
+  loadBalancer: {
+    strategy: 'p2c',
+    targets: [
+      { url: 'http://localhost:8080' },
+      { url: 'http://localhost:8081' },
+    ],
+    healthCheck: {
+      enabled: true,
+      interval: 10000,
+      timeout: 4000,
+      path: '/',
+      expectedStatus: 200,
+    },
+  },
+  proxy: {
+    pathRewrite: (path) => path.replace('/api/p2c', ''),
+  },
+  hooks: {
+    beforeRequest: async (req) => {
+      logger.debug(`🎲 P2C routing for: ${req.url}`)
+    },
+  },
+})
+
+// Alias for P2C
+gateway.addRoute({
+  pattern: '/api/power-of-two/*',
+  loadBalancer: {
+    strategy: 'power-of-two-choices',
+    targets: [
+      { url: 'http://localhost:8080' },
+      { url: 'http://localhost:8081' },
+    ],
+    healthCheck: {
+      enabled: true,
+      interval: 10000,
+      timeout: 4000,
+      path: '/',
+      expectedStatus: 200,
+    },
+  },
+  proxy: {
+    pathRewrite: (path) => path.replace('/api/power-of-two', ''),
+  },
+})
+
+// =============================================================================
+// LATENCY-BASED STRATEGY
+// =============================================================================
+console.log('6️⃣✅  Latency-based Strategy')
+
+gateway.addRoute({
+  pattern: '/api/latency/*',
+  loadBalancer: {
+    strategy: 'latency',
+    targets: [
+      { url: 'http://localhost:8080' },
+      { url: 'http://localhost:8081' },
+    ],
+    healthCheck: {
+      enabled: true,
+      interval: 8000,
+      timeout: 3000,
+      path: '/',
+      expectedStatus: 200,
+    },
+  },
+  proxy: {
+    pathRewrite: (path) => path.replace('/api/latency', ''),
+    timeout: 10000,
+  },
+  hooks: {
+    afterResponse: async (req, res) => {
+      logger.info(`⏱️ Latency strategy served with ${res.status}`)
+    },
+  },
+})
+
+// =============================================================================
+// WEIGHTED LEAST CONNECTIONS
+// =============================================================================
+console.log('6️⃣🔢  Weighted Least Connections Strategy')
+
+gateway.addRoute({
+  pattern: '/api/wlc/*',
+  loadBalancer: {
+    strategy: 'weighted-least-connections',
+    targets: [
+      { url: 'http://localhost:8080', weight: 3 },
+      { url: 'http://localhost:8081', weight: 1 },
+    ],
+    healthCheck: {
+      enabled: true,
+      interval: 12000,
+      timeout: 4000,
+      path: '/',
+      expectedStatus: 200,
+    },
+  },
+  proxy: {
+    pathRewrite: (path) => path.replace('/api/wlc', ''),
+  },
+})
+
+// =============================================================================
+// MONITORING AND METRICS ENDPOINT
 // =============================================================================
 console.log('7️⃣  Monitoring and Metrics')
 
@@ -327,7 +438,7 @@ gateway.addRoute({
 })
 
 // =============================================================================
-// 8. HEALTH CHECK ENDPOINT
+// HEALTH CHECK ENDPOINT
 // =============================================================================
 gateway.addRoute({
   pattern: '/health',
@@ -348,7 +459,7 @@ gateway.addRoute({
 })
 
 // =============================================================================
-// 9. DEMO ENDPOINTS FOR TESTING
+// DEMO ENDPOINTS FOR TESTING
 // =============================================================================
 gateway.addRoute({
   pattern: '/demo',
@@ -359,6 +470,10 @@ gateway.addRoute({
       'Least Connections': '/api/least-connections/get',
       'IP Hash': '/api/ip-hash/get',
       Random: '/api/random/get',
+      'Power of Two Choices (P2C)': '/api/p2c/get',
+      'P2C Alias (power-of-two-choices)': '/api/power-of-two/get',
+      'Latency-based': '/api/latency/get',
+      'Weighted Least Connections': '/api/wlc/get',
       'Users Service': '/api/users/1',
       'Posts Service': '/api/posts/1',
       Metrics: '/metrics',
@@ -430,6 +545,10 @@ try {
   console.log('   • Least Connections: /api/least-connections/*')
   console.log('   • IP Hash: /api/ip-hash/*')
   console.log('   • Random: /api/random/*')
+  console.log('   • Power of Two Choices (P2C): /api/p2c/*')
+  console.log('   • P2C Alias (power-of-two-choices): /api/power-of-two/*')
+  console.log('   • Latency-based: /api/latency/*')
+  console.log('   • Weighted Least Connections: /api/wlc/*')
   console.log('   • Users Service: /api/users/*')
   console.log('   • Posts Service: /api/posts/*')
 
