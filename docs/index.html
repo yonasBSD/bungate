@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Bungate - The Lightning-Fast HTTP Gateway & Load Balancer for the Modern Web. Built on Bun for maximum performance."
+    />
+    <meta
+      name="keywords"
+      content="bungate, bun, gateway, load balancer, http, microservices, api gateway, typescript"
+    />
+    <title>Bungate - Lightning-Fast HTTP Gateway & Load Balancer</title>
+    <link rel="icon" type="image/png" href="bungate-logo.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <div class="container">
+        <div class="header-content">
+          <a href="#" class="logo"> </a>
+          <nav class="nav-links">
+            <a href="https://github.com/BackendStack21/bungate">GitHub</a>
+            <a href="https://github.com/BackendStack21/bungate#readme"
+              >Documentation</a
+            >
+            <a href="https://www.npmjs.com/package/bungate">npm</a>
+            <a href="https://github.com/BackendStack21/bungate/issues"
+              >Issues</a
+            >
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-badge">⚡ POWERED BY BUN'S NATIVE PERFORMANCE</div>
+        <h1 class="animate-in">
+          <span class="gradient-text">
+            <img src="bungate-logo.png" alt="Bungate Logo" class="logo-img" />
+          </span>
+        </h1>
+        <p class="hero-subtitle animate-in">
+          The Lightning-Fast HTTP Gateway & Load Balancer for the Modern Web.
+          Zero config, maximum performance.
+        </p>
+        <div class="hero-features animate-in">
+          <span class="hero-feature">Single-digit millisecond latency</span>
+          <span class="hero-feature">8+ Load Balancing Algorithms</span>
+          <span class="hero-feature">Circuit Breaker & Health Checks</span>
+          <span class="hero-feature">Zero Config Required</span>
+        </div>
+        <div class="cta-buttons animate-in">
+          <a
+            href="https://github.com/BackendStack21/bungate"
+            class="btn btn-primary"
+            >View on GitHub</a
+          >
+          <a href="#get-started" class="btn btn-secondary">Get Started</a>
+          <a
+            href="https://github.com/BackendStack21/bungate/tree/main/benchmark"
+            class="btn btn-secondary"
+            >Benchmarks</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">Why Choose Bungate?</h2>
+        <p class="section-subtitle">
+          Built for developers who demand performance without sacrificing
+          developer experience
+        </p>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🚀</div>
+            <h3>Bun-Native Performance</h3>
+            <p>
+              Optimized specifically for Bun's runtime with minimal overhead.
+              Achieves 18K+ requests/second with single-digit millisecond
+              average latency and sub-30ms 99th percentile response times in
+              production benchmarks.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔧</div>
+            <h3>TypeScript First</h3>
+            <p>
+              Full TypeScript support with comprehensive type definitions for
+              all APIs. Enjoy excellent IDE autocomplete, type safety, and
+              inline documentation as you build.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>Zero Config</h3>
+            <p>
+              Works out of the box with sensible defaults. Get started in
+              seconds without sacrificing power, flexibility, or performance.
+              Production-ready from day one.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🧠</div>
+            <h3>Smart Load Balancing</h3>
+            <p>
+              8 intelligent strategies: round-robin, least-connections,
+              weighted, ip-hash, random, p2c (power-of-two-choices),
+              latency-based, and weighted-least-connections. Session affinity
+              with cookie-based persistence.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3>Production Ready</h3>
+            <p>
+              Circuit breakers, health checks, auto-failover, timeout
+              management, and graceful degradation. Built for reliability and
+              resilience in production environments.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔐</div>
+            <h3>Enterprise Authentication</h3>
+            <p>
+              JWT with JWKS support, API keys, OAuth2/OIDC integration. Custom
+              token extraction, role-based authorization, and mixed
+              authentication modes. Production-ready security without extra
+              dependencies.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Code Section -->
+    <section class="section code-section" id="get-started">
+      <div class="container">
+        <h2 class="section-title">Get Started in Seconds</h2>
+        <p class="section-subtitle">
+          Production-ready HTTP gateway with full TypeScript support and
+          intelligent load balancing
+        </p>
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-title">gateway.ts</span>
+            <button class="copy-btn" onclick="copyCode()">📋 Copy</button>
+          </div>
+          <pre><code id="code-block"><span class="code-comment">// Install: bun add bungate</span>
+<span class="code-keyword">import</span> { BunGateway } <span class="code-keyword">from</span> <span class="code-string">'bungate'</span>
+
+<span class="code-comment">// Create gateway with cluster mode & auth</span>
+<span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
+  server: { port: <span class="code-number">3000</span> },
+  cluster: { 
+    enabled: <span class="code-keyword">true</span>, 
+    workers: <span class="code-number">4</span>  <span class="code-comment">// Multi-process</span>
+  },
+  auth: {
+    secret: process.env.<span class="code-function">JWT_SECRET</span>,
+    excludePaths: [<span class="code-string">'/health'</span>, <span class="code-string">'/auth/*'</span>],
+  },
+  metrics: { enabled: <span class="code-keyword">true</span> },
+})
+
+<span class="code-comment">// Intelligent load balancing with health checks</span>
+gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/api/*'</span>,
+  loadBalancer: {
+    strategy: <span class="code-string">'least-connections'</span>,
+    targets: [
+      { url: <span class="code-string">'http://api1.example.com'</span> },
+      { url: <span class="code-string">'http://api2.example.com'</span> },
+      { url: <span class="code-string">'http://api3.example.com'</span> },
+    ],
+    healthCheck: {
+      enabled: <span class="code-keyword">true</span>,
+      interval: <span class="code-number">15000</span>,
+      path: <span class="code-string">'/health'</span>,
+    },
+  },
+  circuitBreaker: { 
+    enabled: <span class="code-keyword">true</span>, 
+    failureThreshold: <span class="code-number">5</span> 
+  },
+})
+
+<span class="code-comment">// Rate limiting with JWT auth</span>
+gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/admin/*'</span>,
+  target: <span class="code-string">'http://admin.example.com'</span>,
+  rateLimit: {
+    max: <span class="code-number">100</span>,
+    windowMs: <span class="code-number">60000</span>,
+    keyGenerator: <span class="code-keyword">(req)</span> <span class="code-keyword">=></span> req.<span class="code-function">user</span>?.id || <span class="code-string">'unknown'</span>,
+  },
+})
+
+<span class="code-keyword">await</span> gateway.<span class="code-function">listen</span>()
+console.<span class="code-function">log</span>(<span class="code-string">'🚀 Bungate cluster running on :3000'</span>)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Load Balancing Algorithms Section -->
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">8+ Load Balancing Strategies</h2>
+        <p class="section-subtitle">
+          Choose the right algorithm for your traffic patterns and architecture
+        </p>
+
+        <div class="algorithms-grid">
+          <!-- Round Robin -->
+          <div class="algorithm-card">
+            <h3>🔄 Round Robin</h3>
+            <p class="algorithm-description">
+              Equal distribution across all targets. Perfect for stateless
+              services with uniform capacity.
+            </p>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">round-robin.ts</span>
+              </div>
+              <pre><code>gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/api/*'</span>,
+  loadBalancer: {
+    strategy: <span class="code-string">'round-robin'</span>,
+    targets: [
+      { url: <span class="code-string">'http://api1.example.com'</span> },
+      { url: <span class="code-string">'http://api2.example.com'</span> },
+      { url: <span class="code-string">'http://api3.example.com'</span> },
+    ],
+  },
+})</code></pre>
+            </div>
+          </div>
+
+          <!-- Least Connections -->
+          <div class="algorithm-card">
+            <h3>🎯 Least Connections</h3>
+            <p class="algorithm-description">
+              Route to the server with fewest active connections. Ideal for
+              variable request durations.
+            </p>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">least-connections.ts</span>
+              </div>
+              <pre><code>gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/api/*'</span>,
+  loadBalancer: {
+    strategy: <span class="code-string">'least-connections'</span>,
+    targets: [
+      { url: <span class="code-string">'http://api1.example.com'</span> },
+      { url: <span class="code-string">'http://api2.example.com'</span> },
+    ],
+  },
+})</code></pre>
+            </div>
+          </div>
+
+          <!-- Weighted -->
+          <div class="algorithm-card">
+            <h3>⚖️ Weighted</h3>
+            <p class="algorithm-description">
+              Distribute based on server capacity and weights. Perfect for
+              heterogeneous server specs.
+            </p>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">weighted.ts</span>
+              </div>
+              <pre><code>gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/api/*'</span>,
+  loadBalancer: {
+    strategy: <span class="code-string">'weighted'</span>,
+    targets: [
+      { url: <span class="code-string">'http://api1.example.com'</span>, weight: <span class="code-number">70</span> },
+      { url: <span class="code-string">'http://api2.example.com'</span>, weight: <span class="code-number">20</span> },
+      { url: <span class="code-string">'http://api3.example.com'</span>, weight: <span class="code-number">10</span> },
+    ],
+  },
+})</code></pre>
+            </div>
+          </div>
+
+          <!-- IP Hash -->
+          <div class="algorithm-card">
+            <h3>🔐 IP Hash</h3>
+            <p class="algorithm-description">
+              Consistent routing based on client IP. Maintains session affinity
+              for stateful applications.
+            </p>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">ip-hash.ts</span>
+              </div>
+              <pre><code>gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/app/*'</span>,
+  loadBalancer: {
+    strategy: <span class="code-string">'ip-hash'</span>,
+    targets: [
+      { url: <span class="code-string">'http://app1.example.com'</span> },
+      { url: <span class="code-string">'http://app2.example.com'</span> },
+    ],
+  },
+})</code></pre>
+            </div>
+          </div>
+
+          <!-- Random -->
+          <div class="algorithm-card">
+            <h3>🎲 Random</h3>
+            <p class="algorithm-description">
+              Randomized distribution for simple, even load. Low overhead with
+              good distribution.
+            </p>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">random.ts</span>
+              </div>
+              <pre><code>gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/api/*'</span>,
+  loadBalancer: {
+    strategy: <span class="code-string">'random'</span>,
+    targets: [
+      { url: <span class="code-string">'http://api1.example.com'</span> },
+      { url: <span class="code-string">'http://api2.example.com'</span> },
+    ],
+  },
+})</code></pre>
+            </div>
+          </div>
+
+          <!-- Power of Two Choices -->
+          <div class="algorithm-card">
+            <h3>🔀 Power of Two Choices (P2C)</h3>
+            <p class="algorithm-description">
+              Pick the better of two random targets by load/latency. Balances
+              efficiency with performance.
+            </p>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">p2c.ts</span>
+              </div>
+              <pre><code>gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/api/*'</span>,
+  loadBalancer: {
+    strategy: <span class="code-string">'p2c'</span>,
+    targets: [
+      { url: <span class="code-string">'http://api1.example.com'</span> },
+      { url: <span class="code-string">'http://api2.example.com'</span> },
+      { url: <span class="code-string">'http://api3.example.com'</span> },
+    ],
+  },
+})</code></pre>
+            </div>
+          </div>
+
+          <!-- Latency Based -->
+          <div class="algorithm-card">
+            <h3>⚡ Latency</h3>
+            <p class="algorithm-description">
+              Prefer the target with lowest average response time. Optimizes for
+              user experience.
+            </p>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">latency.ts</span>
+              </div>
+              <pre><code>gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/api/*'</span>,
+  loadBalancer: {
+    strategy: <span class="code-string">'latency'</span>,
+    targets: [
+      { url: <span class="code-string">'http://api1.example.com'</span> },
+      { url: <span class="code-string">'http://api2.example.com'</span> },
+    ],
+  },
+})</code></pre>
+            </div>
+          </div>
+
+          <!-- Weighted Least Connections -->
+          <div class="algorithm-card">
+            <h3>📊 Weighted Least Connections</h3>
+            <p class="algorithm-description">
+              Combines weights with connection count. Best for mixed capacity
+              with variable load.
+            </p>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">weighted-least-connections.ts</span>
+              </div>
+              <pre><code>gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/api/*'</span>,
+  loadBalancer: {
+    strategy: <span class="code-string">'weighted-least-connections'</span>,
+    targets: [
+      { url: <span class="code-string">'http://api1.example.com'</span>, weight: <span class="code-number">3</span> },
+      { url: <span class="code-string">'http://api2.example.com'</span>, weight: <span class="code-number">2</span> },
+      { url: <span class="code-string">'http://api3.example.com'</span>, weight: <span class="code-number">1</span> },
+    ],
+  },
+})</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Middleware Section -->
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">Comprehensive Feature Suite</h2>
+        <p class="section-subtitle">
+          Enterprise-grade features for modern API gateways
+        </p>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Cluster Mode</h3>
+            <p>
+              Multi-process clustering for maximum CPU utilization.
+              Zero-downtime rolling restarts with SIGUSR2, dynamic scaling
+              (scaleUp/Down/To), and exponential backoff with jitter for worker
+              restarts.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔄</div>
+            <h3>Load Balancing</h3>
+            <p>
+              8 different strategies including round-robin, least-connections,
+              weighted, ip-hash, latency-based, and power-of-two-choices for
+              optimal traffic distribution.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🌐</div>
+            <h3>Circuit Breaker</h3>
+            <p>
+              Automatic failure detection and recovery with configurable
+              thresholds. Prevent cascading failures and improve system
+              resilience.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔐</div>
+            <h3>JWT Authentication</h3>
+            <p>
+              Secure JSON Web Token authentication with JWKS support, role-based
+              authorization, and custom claims validation built right in.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">�</div>
+            <h3>Middleware System</h3>
+            <p>
+              Powerful async/await middleware pipeline for custom
+              request/response processing. CORS support, path rewriting, URL
+              transformation, and comprehensive lifecycle hooks.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Observability</h3>
+            <p>
+              Prometheus metrics, structured JSON logging with request tracing,
+              health check APIs, real-time statistics, and custom metric
+              collection for complete visibility.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⏱️</div>
+            <h3>Rate Limiting</h3>
+            <p>
+              Flexible rate limiting with custom key generation. Protect your
+              APIs from abuse with per-IP, per-user, or custom limits and
+              configurable time windows.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="section stats-section">
+      <div class="container">
+        <h2 class="section-title">Built for Modern Web</h2>
+        <p class="section-subtitle">
+          Leveraging Bun's speed with developer-friendly APIs
+        </p>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value">⚡ 19.5K</div>
+            <div class="stat-label">Requests per Second</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">🎯 Zero</div>
+            <div class="stat-label">Config Required</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">🧠 8+</div>
+            <div class="stat-label">Load Balancing Strategies</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">🔐 Multi</div>
+            <div class="stat-label">Auth Methods (JWT/JWKS/OAuth2)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section">
+      <div class="container" style="text-align: center">
+        <h2 class="section-title">Ready to Get Started?</h2>
+        <p class="section-subtitle">
+          Build high-performance HTTP gateways with Bun today
+        </p>
+        <div class="cta-buttons">
+          <a
+            href="https://github.com/BackendStack21/bungate/blob/main/README.md"
+            class="btn btn-primary"
+            >Read the Documentation</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-links">
+            <a href="https://github.com/BackendStack21/bungate">GitHub</a>
+            <a href="https://github.com/BackendStack21/bungate/issues"
+              >Report Issues</a
+            >
+            <a href="https://www.npmjs.com/package/bungate">npm</a>
+            <a
+              href="https://github.com/BackendStack21/bungate/blob/main/benchmark/README.md"
+              >Benchmarks</a
+            >
+          </div>
+          <p class="footer-text">
+            © 2025 <a href="https://21no.de/">21no.de</a> • Open source under
+            the MIT License.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      function copyCode() {
+        const codeBlock = document.getElementById('code-block')
+        const textToCopy = codeBlock.innerText
+
+        navigator.clipboard
+          .writeText(textToCopy)
+          .then(() => {
+            const copyBtn = document.querySelector('.copy-btn')
+            const originalText = copyBtn.innerHTML
+            copyBtn.innerHTML = '✓ Copied!'
+            copyBtn.style.background = 'var(--accent-primary)'
+            copyBtn.style.color = 'white'
+
+            setTimeout(() => {
+              copyBtn.innerHTML = originalText
+              copyBtn.style.background = 'var(--bg-secondary)'
+              copyBtn.style.color = 'var(--text-secondary)'
+            }, 2000)
+          })
+          .catch((err) => {
+            console.error('Failed to copy:', err)
+          })
+      }
+
+      // Smooth scroll for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault()
+          const target = document.querySelector(this.getAttribute('href'))
+          if (target) {
+            target.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start',
+            })
+          }
+        })
+      })
+    </script>
+  </body>
+</html>

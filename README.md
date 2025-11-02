@@ -11,6 +11,8 @@
 
 <img src="https://raw.githubusercontent.com/BackendStack21/bungate/main/bungate-logo.png" alt="Bungate Logo" width="200"/>
 
+> Landing page: [https://bungate.21no.de](https://bungate.21no.de)
+
 ## ⚡ Why Bungate?
 
 - **🔥 Blazing Fast**: Built on Bun - up to 4x faster than Node.js alternatives
