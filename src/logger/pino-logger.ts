@@ -61,6 +61,49 @@ export class BunGateLogger implements Logger {
     const pinoConfig: any = {
       level: this.config.level,
       ...config,
+      // Redact sensitive information from logs
+      redact: {
+        paths: [
+          // API Keys
+          'apiKey',
+          'api_key',
+          '*.apiKey',
+          '*.api_key',
+          'headers.apiKey',
+          'headers.api_key',
+          'headers["x-api-key"]',
+          'headers["X-API-Key"]',
+          'headers["X-Api-Key"]',
+          'headers.authorization',
+          'headers.Authorization',
+          // JWT tokens
+          'token',
+          'accessToken',
+          'access_token',
+          'refreshToken',
+          'refresh_token',
+          'jwt',
+          '*.token',
+          '*.jwt',
+          // Passwords and secrets
+          'password',
+          'passwd',
+          'secret',
+          'privateKey',
+          'private_key',
+          '*.password',
+          '*.secret',
+          // Credit card data
+          'creditCard',
+          'cardNumber',
+          'cvv',
+          'ccv',
+          // Other sensitive fields
+          'ssn',
+          'social_security',
+        ],
+        censor: '[REDACTED]',
+      },
     }
 
     // Configure pretty printing for development
@@ -88,6 +131,64 @@ export class BunGateLogger implements Logger {
     this.pino = pino(pinoConfig)
   }
 
+  /**
+   * Sanitizes sensitive data from objects before logging
+   * Provides an additional layer of protection beyond Pino's redaction
+   */
+  private sanitizeData(data: any): any {
+    if (!data || typeof data !== 'object') {
+      return data
+    }
+
+    // Create a shallow copy to avoid mutating the original
+    const sanitized = Array.isArray(data) ? [...data] : { ...data }
+
+    // List of sensitive field names (case-insensitive patterns)
+    const sensitiveKeys = [
+      'apikey',
+      'api_key',
+      'x-api-key',
+      'authorization',
+      'token',
+      'accesstoken',
+      'access_token',
+      'refreshtoken',
+      'refresh_token',
+      'jwt',
+      'password',
+      'passwd',
+      'secret',
+      'privatekey',
+      'private_key',
+      'creditcard',
+      'cardnumber',
+      'cvv',
+      'ccv',
+      'ssn',
+      'social_security',
+    ]
+
+    for (const key in sanitized) {
+      if (Object.prototype.hasOwnProperty.call(sanitized, key)) {
+        const lowerKey = key.toLowerCase()
+
+        // Check if key matches sensitive patterns
+        if (sensitiveKeys.some((pattern) => lowerKey.includes(pattern))) {
+          sanitized[key] = '[REDACTED]'
+        }
+        // Recursively sanitize nested objects
+        else if (
+          typeof sanitized[key] === 'object' &&
+          sanitized[key] !== null
+        ) {
+          sanitized[key] = this.sanitizeData(sanitized[key])
+        }
+      }
+    }
+
+    return sanitized
+  }
+
   getSerializers(): LoggerOptions['serializers'] | undefined {
     return this.config.serializers
   }
@@ -99,9 +200,11 @@ export class BunGateLogger implements Logger {
     dataOrMsg?: Record<string, any> | string,
   ): void {
     if (typeof msgOrObj === 'string') {
-      this.pino.info(dataOrMsg || {}, msgOrObj)
+      const sanitizedData = this.sanitizeData(dataOrMsg || {})
+      this.pino.info(sanitizedData, msgOrObj)
     } else {
-      this.pino.info(msgOrObj, dataOrMsg as string)
+      const sanitizedObj = this.sanitizeData(msgOrObj)
+      this.pino.info(sanitizedObj, dataOrMsg as string)
     }
   }
 
@@ -112,9 +215,11 @@ export class BunGateLogger implements Logger {
     dataOrMsg?: Record<string, any> | string,
   ): void {
     if (typeof msgOrObj === 'string') {
-      this.pino.debug(dataOrMsg || {}, msgOrObj)
+      const sanitizedData = this.sanitizeData(dataOrMsg || {})
+      this.pino.debug(sanitizedData, msgOrObj)
     } else {
-      this.pino.debug(msgOrObj, dataOrMsg as string)
+      const sanitizedObj = this.sanitizeData(msgOrObj)
+      this.pino.debug(sanitizedObj, dataOrMsg as string)
     }
   }
 
@@ -125,9 +230,11 @@ export class BunGateLogger implements Logger {
     dataOrMsg?: Record<string, any> | string,
   ): void {
     if (typeof msgOrObj === 'string') {
-      this.pino.warn(dataOrMsg || {}, msgOrObj)
+      const sanitizedData = this.sanitizeData(dataOrMsg || {})
+      this.pino.warn(sanitizedData, msgOrObj)
     } else {
-      this.pino.warn(msgOrObj, dataOrMsg as string)
+      const sanitizedObj = this.sanitizeData(msgOrObj)
+      this.pino.warn(sanitizedObj, dataOrMsg as string)
     }
   }
 
@@ -151,9 +258,11 @@ export class BunGateLogger implements Logger {
             }
           : {}),
       }
-      this.pino.error(errorData, msgOrObj)
+      const sanitizedData = this.sanitizeData(errorData)
+      this.pino.error(sanitizedData, msgOrObj)
     } else {
-      this.pino.error(msgOrObj, errorOrMsg as string)
+      const sanitizedObj = this.sanitizeData(msgOrObj)
+      this.pino.error(sanitizedObj, errorOrMsg as string)
     }
   }
 
