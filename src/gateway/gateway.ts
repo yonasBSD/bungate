@@ -378,7 +378,7 @@ export class BunGateway implements Gateway {
       const baseUrl = route.target
 
       proxy = createGatewayProxy({
-        logger: this.config.logger?.pino.child({ component: 'GatewayProxy' }),
+        logger: this.config.logger?.pino.child({ component: 'GatewayProxy' }) as any,
         base: baseUrl,
         timeout: route.timeout || route.proxy?.timeout || 30000,
         followRedirects: route.proxy?.followRedirects !== false,
