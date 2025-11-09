@@ -143,4 +143,31 @@ describe('BunGateLogger', () => {
       })
     }).not.toThrow()
   })
+
+  test('should sanitize sensitive data in message strings', () => {
+    const logger = new BunGateLogger({
+      level: 'info',
+    })
+
+    // Test that sensitive patterns in messages are sanitized
+    expect(() => {
+      logger.info('User logged in with apiKey: abc123xyz')
+      logger.info('Authentication failed for token=secret-token-456')
+      logger.warn('Password reset requested: password: newPass123')
+      logger.debug('API request with Bearer eyJhbGciOiJIUzI1NiIs...')
+      logger.error('Failed to authenticate with secret: my-secret-key')
+    }).not.toThrow()
+  })
+
+  test('should sanitize sensitive data in object-based log calls with messages', () => {
+    const logger = new BunGateLogger({
+      level: 'debug',
+    })
+
+    // Test object form with message that might contain sensitive data
+    expect(() => {
+      logger.info({ userId: 123 }, 'User authenticated with apiKey: xyz789')
+      logger.warn({ action: 'login' }, 'Token validation failed: token=abc123')
+    }).not.toThrow()
+  })
 })

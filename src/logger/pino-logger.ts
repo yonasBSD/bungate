@@ -189,6 +189,47 @@ export class BunGateLogger implements Logger {
     return sanitized
   }
 
+  /**
+   * Sanitizes message strings that might contain sensitive information
+   * Looks for common patterns of exposed secrets in log messages
+   */
+  private sanitizeMessage(message: string | undefined): string | undefined {
+    if (!message || typeof message !== 'string') {
+      return message
+    }
+
+    // Pattern to match common API key/token formats in strings
+    // This catches patterns like: "apiKey: abc123", "token=xyz", "Bearer token123", etc.
+    const sensitivePatterns = [
+      // API keys with various formats
+      /\b(api[_-]?key|apikey)[\s:=]+[^\s,}\]]+/gi,
+      // Bearer tokens
+      /\bBearer\s+[^\s,}\]]+/gi,
+      // Token assignments
+      /\b(token|jwt|access[_-]?token|refresh[_-]?token)[\s:=]+[^\s,}\]]+/gi,
+      // Password assignments
+      /\b(password|passwd|pwd)[\s:=]+[^\s,}\]]+/gi,
+      // Secret assignments
+      /\b(secret|private[_-]?key)[\s:=]+[^\s,}\]]+/gi,
+      // Generic key-value patterns with sensitive keys
+      /["']?(apiKey|api_key|token|password|secret)["']?\s*[:=]\s*["']?[^"',}\]\s]+/gi,
+    ]
+
+    let sanitized = message
+    for (const pattern of sensitivePatterns) {
+      sanitized = sanitized.replace(pattern, (match) => {
+        // Keep the key name but redact the value
+        const colonIndex = match.search(/[:=]/)
+        if (colonIndex !== -1) {
+          return match.substring(0, colonIndex + 1) + ' [REDACTED]'
+        }
+        return '[REDACTED]'
+      })
+    }
+
+    return sanitized
+  }
+
   getSerializers(): LoggerOptions['serializers'] | undefined {
     return this.config.serializers
   }
@@ -201,10 +242,12 @@ export class BunGateLogger implements Logger {
   ): void {
     if (typeof msgOrObj === 'string') {
       const sanitizedData = this.sanitizeData(dataOrMsg || {})
-      this.pino.info(sanitizedData, msgOrObj)
+      const sanitizedMsg = this.sanitizeMessage(msgOrObj)
+      this.pino.info(sanitizedData, sanitizedMsg)
     } else {
       const sanitizedObj = this.sanitizeData(msgOrObj)
-      this.pino.info(sanitizedObj, dataOrMsg as string)
+      const sanitizedMsg = this.sanitizeMessage(dataOrMsg as string)
+      this.pino.info(sanitizedObj, sanitizedMsg)
     }
   }
 
@@ -216,10 +259,12 @@ export class BunGateLogger implements Logger {
   ): void {
     if (typeof msgOrObj === 'string') {
       const sanitizedData = this.sanitizeData(dataOrMsg || {})
-      this.pino.debug(sanitizedData, msgOrObj)
+      const sanitizedMsg = this.sanitizeMessage(msgOrObj)
+      this.pino.debug(sanitizedData, sanitizedMsg)
     } else {
       const sanitizedObj = this.sanitizeData(msgOrObj)
-      this.pino.debug(sanitizedObj, dataOrMsg as string)
+      const sanitizedMsg = this.sanitizeMessage(dataOrMsg as string)
+      this.pino.debug(sanitizedObj, sanitizedMsg)
     }
   }
 
@@ -231,10 +276,12 @@ export class BunGateLogger implements Logger {
   ): void {
     if (typeof msgOrObj === 'string') {
       const sanitizedData = this.sanitizeData(dataOrMsg || {})
-      this.pino.warn(sanitizedData, msgOrObj)
+      const sanitizedMsg = this.sanitizeMessage(msgOrObj)
+      this.pino.warn(sanitizedData, sanitizedMsg)
     } else {
       const sanitizedObj = this.sanitizeData(msgOrObj)
-      this.pino.warn(sanitizedObj, dataOrMsg as string)
+      const sanitizedMsg = this.sanitizeMessage(dataOrMsg as string)
+      this.pino.warn(sanitizedObj, sanitizedMsg)
     }
   }
 
@@ -259,10 +306,12 @@ export class BunGateLogger implements Logger {
           : {}),
       }
       const sanitizedData = this.sanitizeData(errorData)
-      this.pino.error(sanitizedData, msgOrObj)
+      const sanitizedMsg = this.sanitizeMessage(msgOrObj)
+      this.pino.error(sanitizedData, sanitizedMsg)
     } else {
       const sanitizedObj = this.sanitizeData(msgOrObj)
-      this.pino.error(sanitizedObj, errorOrMsg as string)
+      const sanitizedMsg = this.sanitizeMessage(errorOrMsg as string)
+      this.pino.error(sanitizedObj, sanitizedMsg)
     }
   }
 
