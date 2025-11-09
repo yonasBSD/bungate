@@ -1,6 +1,6 @@
 {
   "name": "bungate",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "license": "MIT",
   "description": "A high-performance HTTP gateway for Bun, designed for microservices and API gateways.",
   "keywords": [
