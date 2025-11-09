@@ -223,6 +223,28 @@ describe('InputValidator', () => {
       }
     })
 
+    test('should detect XSS patterns with malformed closing tags (CodeQL fix)', () => {
+      const validator = new InputValidator()
+      // Test cases for the improved regex that handles edge cases
+      const edgeCaseXSSPatterns = [
+        '<script>alert(1)</script >', // Whitespace before >
+        '<script>alert(1)</script  >', // Multiple spaces
+        '<SCRIPT>alert(1)</SCRIPT>', // Uppercase
+        '<ScRiPt>alert(1)</ScRiPt>', // Mixed case
+        '<script>alert(1)\n</script>', // Multiline
+        '<script type="text/javascript">alert(1)</script>', // Attributes
+        '<script async>alert(1)</script defer>', // Attributes in closing tag
+      ]
+
+      for (const pattern of edgeCaseXSSPatterns) {
+        const params = new URLSearchParams()
+        params.set('input', pattern)
+        const result = validator.validateQueryParams(params)
+        expect(result.valid).toBe(false)
+        expect(result.errors?.some((err) => err.includes('XSS'))).toBe(true)
+      }
+    })
+
     test('should detect command injection patterns', () => {
       const validator = new InputValidator()
       const commandInjections = [

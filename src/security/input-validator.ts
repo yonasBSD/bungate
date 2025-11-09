@@ -243,7 +243,7 @@ export class InputValidator {
    */
   private containsXSSPattern(value: string): boolean {
     const xssPatterns = [
-      /<script[^>]*>.*?<\/script>/i,
+      /<script\b[^>]*>.*?<\/script\b[^>]*>/gis,
       /<iframe[^>]*>/i,
       /javascript:/i,
       /on\w+\s*=/i, // Event handlers like onclick=
