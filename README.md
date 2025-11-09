@@ -11,20 +11,27 @@
 
 <img src="https://raw.githubusercontent.com/BackendStack21/bungate/main/bungate-logo.png" alt="Bungate Logo" width="200"/>
 
-> Landing page: [https://bungate.21no.de](https://bungate.21no.de)
+> **Landing page:** [https://bungate.21no.de](https://bungate.21no.de)  
+> **Full Documentation:** [docs/DOCUMENTATION.md](./docs/DOCUMENTATION.md)
+
+---
 
 ## ⚡ Why Bungate?
 
-- **🔥 Blazing Fast**: Built on Bun - up to 4x faster than Node.js alternatives
-- **🎯 Zero Config**: Works out of the box with sensible defaults
-- **🧠 Smart Load Balancing**: Multiple algorithms: `round-robin`, `least-connections`, `random`, `weighted`, `ip-hash`, `p2c` (power-of-two-choices), `latency`, `weighted-least-connections`
-- **🛡️ Production Ready**: Circuit breakers, health checks, and auto-failover
-- **🔐 Built-in Authentication**: JWT, API keys, JWKS, and OAuth2 support out of the box
-- **🎨 Developer Friendly**: Full TypeScript support with intuitive APIs
-- **📊 Observable**: Built-in metrics, logging, and monitoring
-- **🔧 Extensible**: Powerful middleware system for custom logic
+- **🔥 Blazing Fast** - Built on Bun, up to 4x faster than Node.js alternatives
+- **🎯 Zero Config** - Works out of the box with sensible defaults
+- **🧠 Smart Load Balancing** - 8+ algorithms including round-robin, least-connections, weighted, ip-hash, p2c, latency
+- **🛡️ Production Ready** - Circuit breakers, health checks, auto-failover
+- **🔐 Built-in Auth** - JWT, API keys, JWKS, OAuth2 support out of the box
+- **🔒 Enterprise Security** - TLS 1.3, input validation, security headers, OWASP Top 10 protection
+- **🎨 Developer Friendly** - Full TypeScript support with intuitive APIs
+- **📊 Observable** - Built-in Prometheus metrics, structured logging, monitoring
+- **🔧 Extensible** - Powerful middleware system for custom logic
+- **⚡ Cluster Mode** - Multi-process scaling with zero-downtime restarts
 
-> See benchmarks comparing Bungate with Nginx and Envoy in the [benchmark directory](./benchmark).
+> See [benchmarks](./benchmark) comparing Bungate with Nginx and Envoy.
+
+---
 
 ## 🚀 Quick Start
 
@@ -44,7 +51,7 @@ import { BunGateway } from 'bungate'
 // Create a production-ready gateway with zero config
 const gateway = new BunGateway({
   server: { port: 3000 },
-  metrics: { enabled: true }, // Enable Prometheus metrics
+  metrics: { enabled: true },
 })
 
 // Add intelligent load balancing
@@ -60,20 +67,18 @@ gateway.addRoute({
     healthCheck: {
       enabled: true,
       interval: 30000,
-      timeout: 5000,
       path: '/health',
     },
   },
 })
 
-// Add rate limiting and single target for public routes
+// Add rate limiting
 gateway.addRoute({
   pattern: '/public/*',
   target: 'http://backend.example.com',
   rateLimit: {
     max: 1000,
     windowMs: 60000,
-    keyGenerator: (req) => req.headers.get('x-forwarded-for') || 'unknown',
   },
 })
 
@@ -83,129 +88,119 @@ console.log('🚀 Bungate running on http://localhost:3000')
 ```
 
 **That's it!** Your high-performance gateway is now handling traffic with:
+✅ Automatic load balancing  
+✅ Health monitoring  
+✅ Rate limiting  
+✅ Circuit breaker protection  
+✅ Prometheus metrics
 
-- ✅ Automatic load balancing
-- ✅ Health monitoring
-- ✅ Rate limiting
-- ✅ Circuit breaker protection
-- ✅ Prometheus metrics
-- ✅ Cluster mode support
-- ✅ Structured logging
+**👉 [Full Quick Start Guide](./docs/QUICK_START.md)**
+
+---
 
 ## 🌟 Key Features
 
 ### 🚀 **Performance & Scalability**
 
-- **High Throughput**: Handle thousands of requests per second
-- **Low Latency**: Minimal overhead routing with optimized request processing
-- **Memory Efficient**: Optimized for high-concurrent workloads
-- **Auto-scaling**: Dynamic target management and health monitoring
-- **Cluster Mode**: Multi-process clustering for maximum CPU utilization
+- **High Throughput** - Handle thousands of requests per second
+- **Low Latency** - Minimal overhead routing with optimized request processing
+- **Memory Efficient** - Optimized for high-concurrent workloads
+- **Cluster Mode** - Multi-process clustering for maximum CPU utilization
 
 ### 🎯 **Load Balancing Strategies**
 
-- **Round Robin**: Equal distribution across all targets
-- **Weighted**: Distribute based on server capacity and weights
-- **Least Connections**: Route to the least busy server
-- **IP Hash**: Consistent routing based on client IP for session affinity
-- **Random**: Randomized distribution for even load
-- **Power of Two Choices (p2c)**: Pick the better of two random targets by load/latency
-- **Latency**: Prefer the target with the lowest average response time
-- **Weighted Least Connections**: Prefer targets with fewer connections normalized by weight
-- **Sticky Sessions**: Session affinity with cookie-based persistence
+- **Round Robin** - Equal distribution across all targets
+- **Weighted** - Distribute based on server capacity
+- **Least Connections** - Route to the least busy server
+- **IP Hash** - Consistent routing for session affinity
+- **Random** - Randomized distribution
+- **Power of Two Choices (P2C)** - Pick better of two random targets
+- **Latency** - Prefer the fastest server
+- **Weighted Least Connections** - Combine capacity with load awareness
+- **Sticky Sessions** - Cookie-based session persistence
+
+**👉 [Load Balancing Guide](./docs/LOAD_BALANCING.md)**
 
 ### 🛡️ **Reliability & Resilience**
 
-- **Circuit Breaker Pattern**: Automatic failure detection and recovery
-- **Health Checks**: Active monitoring with custom validation
-- **Timeout Management**: Route-level and global timeout controls
-- **Auto-failover**: Automatic traffic rerouting on service failures
-- **Graceful Degradation**: Fallback responses and cached data support
+- **Circuit Breaker Pattern** - Automatic failure detection and recovery
+- **Health Checks** - Active monitoring with custom validation
+- **Timeout Management** - Route-level and global timeout controls
+- **Auto-failover** - Automatic traffic rerouting on service failures
 
-### 🔧 **Advanced Features**
+### 🔐 **Built-in Authentication**
 
-- **Authentication & Authorization**: JWT, API keys, JWKS, OAuth2/OIDC support
-- **Middleware System**: Custom request/response processing pipeline
-- **Path Rewriting**: URL transformation and routing rules
-- **Rate Limiting**: Flexible rate limiting with custom key generation
-- **CORS Support**: Full cross-origin resource sharing configuration
-- **Request/Response Hooks**: Comprehensive lifecycle event handling
+- **JWT** - Full JWT support with HS256, RS256, and more
+- **JWKS** - JSON Web Key Set for dynamic key management
+- **API Keys** - Simple key-based authentication
+- **OAuth2/OIDC** - Integration with external identity providers
+- **Custom Validation** - Extensible authentication logic
+
+**👉 [Authentication Guide](./docs/AUTHENTICATION.md)**
+
+### 🔒 **Enterprise Security**
+
+- **TLS/HTTPS** - Full TLS 1.3 support with automatic HTTP redirect
+- **Input Validation** - Comprehensive validation and sanitization
+- **Security Headers** - HSTS, CSP, X-Frame-Options, and more
+- **Session Management** - Cryptographically secure session IDs
+- **Trusted Proxies** - IP validation and forwarded header verification
+- **Request Size Limits** - Protection against DoS attacks
+- **JWT Key Rotation** - Zero-downtime key rotation support
+
+**👉 [Security Guide](./docs/SECURITY.md) | [TLS Configuration](./docs/TLS_CONFIGURATION.md)**
 
 ### 📊 **Monitoring & Observability**
 
-- **Prometheus Metrics**: Out-of-the-box performance metrics
-- **Structured Logging**: JSON logging with request tracing
-- **Health Endpoints**: Built-in health check APIs
-- **Real-time Statistics**: Live performance monitoring
-- **Custom Metrics**: Application-specific metric collection
+- **Prometheus Metrics** - Out-of-the-box performance metrics
+- **Structured Logging** - JSON logging with request tracing
+- **Health Endpoints** - Built-in health check APIs
+- **Real-time Statistics** - Live performance monitoring
 
-### 🎨 **Developer Experience**
+---
 
-- **TypeScript First**: Full type safety and IntelliSense support
-- **Zero Dependencies**: Minimal footprint with essential features only
-- **Hot Reload**: Development mode with automatic restarts
-- **Rich Documentation**: Comprehensive examples and API documentation
-- **Testing Support**: Built-in utilities for testing and development
+## 🔒 Quick Start with TLS/HTTPS
 
-## 🏗️ Real-World Examples
-
-### 🌐 **Microservices Gateway**
-
-Perfect for microservices architectures with intelligent routing:
+For production deployments with HTTPS:
 
 ```typescript
 import { BunGateway } from 'bungate'
 
 const gateway = new BunGateway({
-  server: { port: 8080 },
-  cors: {
-    origin: ['https://myapp.com', 'https://admin.myapp.com'],
-    credentials: true,
+  server: { port: 443 },
+  security: {
+    tls: {
+      enabled: true,
+      cert: './cert.pem',
+      key: './key.pem',
+      minVersion: 'TLSv1.3',
+      redirectHTTP: true,
+      redirectPort: 80,
+    },
   },
 })
 
-// User service with JWT authentication
 gateway.addRoute({
-  pattern: '/users/*',
-  target: 'http://user-service:3001',
+  pattern: '/api/*',
+  target: 'http://backend:3000',
   auth: {
-    secret: process.env.JWT_SECRET || 'your-secret-key',
+    secret: process.env.JWT_SECRET,
     jwtOptions: {
       algorithms: ['HS256'],
-      issuer: 'https://auth.myapp.com',
-      audience: 'https://api.myapp.com',
+      issuer: 'https://auth.example.com',
     },
-    optional: false,
-    excludePaths: ['/users/register', '/users/login'],
-  },
-  rateLimit: {
-    max: 100,
-    windowMs: 60000,
-    keyGenerator: (req) =>
-      (req as any).user?.id || req.headers.get('x-forwarded-for') || 'unknown',
   },
 })
 
-// Payment service with circuit breaker
-gateway.addRoute({
-  pattern: '/payments/*',
-  target: 'http://payment-service:3002',
-  circuitBreaker: {
-    enabled: true,
-    failureThreshold: 3,
-    timeout: 5000,
-    resetTimeout: 5000,
-  },
-  hooks: {
-    onError(req, error): Promise<Response> {
-      // Fallback to cached payment status
-      return getCachedPaymentStatus(req.url)
-    },
-  },
-})
+await gateway.listen()
+console.log('🔒 Secure gateway running on https://localhost')
 ```
 
-### 🔄 **High-Performance Cluster Mode**
+**👉 [TLS Configuration Guide](./docs/TLS_CONFIGURATION.md)**
+
+---
+
+## ⚡ Cluster Mode
 
 Scale horizontally with multi-process clustering:
 
@@ -223,355 +218,40 @@ const gateway = new BunGateway({
   },
 })
 
-// High-traffic API endpoints
 gateway.addRoute({
-  pattern: '/api/v1/*',
+  pattern: '/api/*',
   loadBalancer: {
-    targets: [
-      { url: 'http://api-server-1:8080', weight: 2 },
-      { url: 'http://api-server-2:8080', weight: 2 },
-      { url: 'http://api-server-3:8080', weight: 1 },
-    ],
     strategy: 'least-connections',
-    healthCheck: {
-      enabled: true,
-      interval: 5000,
-      timeout: 2000,
-      path: '/health',
-    },
+    targets: [
+      { url: 'http://api-server-1:8080' },
+      { url: 'http://api-server-2:8080' },
+    ],
   },
 })
 
-// Start cluster
-await gateway.listen(3000)
+await gateway.listen()
 console.log('Cluster started with 4 workers')
 ```
 
-#### Advanced usage: Cluster lifecycle and operations
+**Features:**
 
-Bungate’s cluster manager powers zero-downtime restarts, dynamic scaling, and safe shutdowns in production. You can control it via signals or programmatically.
+- ✅ Zero-downtime rolling restarts (SIGUSR2)
+- ✅ Dynamic scaling (scale up/down at runtime)
+- ✅ Automatic worker respawn
+- ✅ Graceful shutdown
+- ✅ Signal-based control
 
-- Zero-downtime rolling restart: send `SIGUSR2` to the master process
-  - The manager spawns a replacement worker first, then gracefully stops the old one
-- Graceful shutdown: send `SIGTERM` or `SIGINT`
-  - Workers receive `SIGTERM` and are given up to `shutdownTimeout` to exit before being force-killed
+**👉 [Clustering Guide](./docs/CLUSTERING.md)**
 
-Programmatic controls (available when using the `ClusterManager` directly):
+---
 
-```ts
-import { ClusterManager, BunGateLogger } from 'bungate'
-
-const logger = new BunGateLogger({ level: 'info' })
-
-const cluster = new ClusterManager(
-  {
-    enabled: true,
-    workers: 4,
-    restartWorkers: true,
-    restartDelay: 1000, // base delay used for exponential backoff with jitter
-    maxRestarts: 10, // lifetime cap per worker
-    respawnThreshold: 5, // sliding window cap
-    respawnThresholdTime: 60_000, // within this time window
-    shutdownTimeout: 30_000,
-    // Set to false when embedding in tests to avoid process.exit(0)
-    exitOnShutdown: true,
-  },
-  logger,
-  './gateway.ts', // worker entry (executed with Bun)
-)
-
-await cluster.start()
-
-// Dynamic scaling
-await cluster.scaleUp(2) // add 2 workers
-await cluster.scaleDown(1) // remove 1 worker
-await cluster.scaleTo(6) // set exact worker count
-
-// Operational visibility
-console.log(cluster.getWorkerCount())
-console.log(cluster.getWorkerInfo()) // includes id, restarts, pid, etc.
-
-// Broadcast a POSIX signal to all workers (e.g., for log-level reloads)
-cluster.broadcastSignal('SIGHUP')
-
-// Target a single worker
-cluster.sendSignalToWorker(1, 'SIGHUP')
-
-// Graceful shutdown (will exit process if exitOnShutdown !== false)
-// await (cluster as any).gracefulShutdown() // internal in gateway use; prefer SIGTERM
-```
-
-Notes:
-
-- Each worker receives `CLUSTER_WORKER=true` and `CLUSTER_WORKER_ID=<n>` environment variables.
-- Restart policy uses exponential backoff with jitter and a sliding window threshold to prevent flapping.
-- Defaults: `shutdownTimeout` 30s, `respawnThreshold` 5 within 60s, `restartDelay` 1s, `maxRestarts` 10.
-
-Configuration reference (cluster):
-
-- `enabled` (boolean): enable multi-process mode
-- `workers` (number): worker process count (defaults to CPU cores)
-- `restartWorkers` (boolean): auto-respawn crashed workers
-- `restartDelay` (ms): base delay for backoff
-- `maxRestarts` (number): lifetime restarts per worker
-- `respawnThreshold` (number): max restarts within time window
-- `respawnThresholdTime` (ms): sliding window size
-- `shutdownTimeout` (ms): grace period before force-kill
-- `exitOnShutdown` (boolean): if true (default), master exits after shutdown; set false in tests/embedded
-
-### 🔄 **Advanced Load Balancing**
-
-Distribute traffic intelligently across multiple backends:
-
-```typescript
-// E-commerce platform with weighted distribution
-gateway.addRoute({
-  pattern: '/products/*',
-  loadBalancer: {
-    strategy: 'weighted',
-    targets: [
-      { url: 'http://products-primary:3000', weight: 70 },
-      { url: 'http://products-secondary:3001', weight: 20 },
-      { url: 'http://products-cache:3002', weight: 10 },
-    ],
-    healthCheck: {
-      enabled: true,
-      path: '/health',
-      interval: 15000,
-      timeout: 5000,
-      expectedStatus: 200,
-    },
-  },
-})
-
-// Session-sticky load balancing for stateful apps
-gateway.addRoute({
-  pattern: '/app/*',
-  loadBalancer: {
-    strategy: 'ip-hash',
-    targets: [
-      { url: 'http://app-server-1:3000' },
-      { url: 'http://app-server-2:3000' },
-      { url: 'http://app-server-3:3000' },
-    ],
-    stickySession: {
-      enabled: true,
-      cookieName: 'app-session',
-      ttl: 3600000, // 1 hour
-    },
-  },
-})
-```
-
-### 🛡️ **Enterprise Security**
-
-Production-grade security with multiple layers:
-
-```typescript
-// API Gateway with comprehensive security
-gateway.addRoute({
-  pattern: '/api/v1/*',
-  target: 'http://api-backend:3000',
-  auth: {
-    // JWT authentication
-    secret: process.env.JWT_SECRET,
-    jwtOptions: {
-      algorithms: ['HS256', 'RS256'],
-      issuer: 'https://auth.myapp.com',
-      audience: 'https://api.myapp.com',
-    },
-    // API key authentication (fallback)
-    apiKeys: async (key, req) => {
-      const validKeys = await getValidApiKeys()
-      return validKeys.includes(key)
-    },
-    apiKeyHeader: 'x-api-key',
-    optional: false,
-    excludePaths: ['/api/v1/health', '/api/v1/public/*'],
-  },
-  middlewares: [
-    // Request validation
-    async (req, next) => {
-      if (req.method === 'POST' || req.method === 'PUT') {
-        const body = await req.json()
-        const validation = validateRequestBody(body)
-        if (!validation.valid) {
-          return new Response(JSON.stringify(validation.errors), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          })
-        }
-      }
-      return next()
-    },
-  ],
-  rateLimit: {
-    max: 1000,
-    windowMs: 60000,
-    keyGenerator: (req) =>
-      (req as any).user?.id ||
-      req.headers.get('x-api-key') ||
-      req.headers.get('x-forwarded-for') ||
-      'unknown',
-    message: 'API rate limit exceeded',
-  },
-  proxy: {
-    headers: {
-      'X-Gateway-Version': '1.0.0',
-      'X-Request-ID': () => crypto.randomUUID(),
-    },
-  },
-})
-```
-
-## 🔐 **Built-in Authentication**
-
-Bungate provides comprehensive authentication support out of the box:
-
-#### JWT Authentication
-
-```typescript
-// Gateway-level JWT authentication (applies to all routes)
-const gateway = new BunGateway({
-  server: { port: 3000 },
-  auth: {
-    secret: process.env.JWT_SECRET,
-    jwtOptions: {
-      algorithms: ['HS256', 'RS256'],
-      issuer: 'https://auth.myapp.com',
-      audience: 'https://api.myapp.com',
-    },
-    excludePaths: ['/health', '/metrics', '/auth/login', '/auth/register'],
-  },
-})
-
-// Route-level JWT authentication (overrides gateway settings)
-gateway.addRoute({
-  pattern: '/admin/*',
-  target: 'http://admin-service:3000',
-  auth: {
-    secret: process.env.ADMIN_JWT_SECRET,
-    jwtOptions: {
-      algorithms: ['RS256'],
-      issuer: 'https://auth.myapp.com',
-      audience: 'https://admin.myapp.com',
-    },
-    optional: false,
-  },
-})
-```
-
-#### JWKS (JSON Web Key Set) Authentication
-
-```typescript
-gateway.addRoute({
-  pattern: '/secure/*',
-  target: 'http://secure-service:3000',
-  auth: {
-    jwksUri: 'https://auth.myapp.com/.well-known/jwks.json',
-    jwtOptions: {
-      algorithms: ['RS256'],
-      issuer: 'https://auth.myapp.com',
-      audience: 'https://api.myapp.com',
-    },
-  },
-})
-```
-
-#### API Key Authentication
-
-```typescript
-gateway.addRoute({
-  pattern: '/api/public/*',
-  target: 'http://public-api:3000',
-  auth: {
-    // Static API keys
-    apiKeys: ['key1', 'key2', 'key3'],
-    apiKeyHeader: 'x-api-key',
-
-    // Dynamic API key validation
-    apiKeyValidator: async (key, req) => {
-      const user = await validateApiKey(key)
-      if (user) {
-        // Attach user info to request
-        ;(req as any).user = user
-        return true
-      }
-      return false
-    },
-  },
-})
-```
-
-#### Mixed Authentication (JWT + API Key)
-
-```typescript
-gateway.addRoute({
-  pattern: '/api/hybrid/*',
-  target: 'http://hybrid-service:3000',
-  auth: {
-    // JWT authentication
-    secret: process.env.JWT_SECRET,
-    jwtOptions: {
-      algorithms: ['HS256'],
-      issuer: 'https://auth.myapp.com',
-    },
-
-    // API key fallback
-    apiKeys: async (key, req) => {
-      return await isValidApiKey(key)
-    },
-    apiKeyHeader: 'x-api-key',
-
-    // Custom token extraction
-    getToken: (req) => {
-      return (
-        req.headers.get('authorization')?.replace('Bearer ', '') ||
-        req.headers.get('x-access-token') ||
-        new URL(req.url).searchParams.get('token')
-      )
-    },
-
-    // Custom error handling
-    unauthorizedResponse: {
-      status: 401,
-      body: { error: 'Authentication required', code: 'AUTH_REQUIRED' },
-      headers: { 'Content-Type': 'application/json' },
-    },
-  },
-})
-```
-
-#### OAuth2 / OpenID Connect
-
-```typescript
-gateway.addRoute({
-  pattern: '/oauth/*',
-  target: 'http://oauth-service:3000',
-  auth: {
-    jwksUri: 'https://accounts.google.com/.well-known/jwks.json',
-    jwtOptions: {
-      algorithms: ['RS256'],
-      issuer: 'https://accounts.google.com',
-      audience: 'your-google-client-id',
-    },
-
-    // Custom validation
-    onError: (error, req) => {
-      console.error('OAuth validation failed:', error)
-      return new Response('OAuth authentication failed', { status: 401 })
-    },
-  },
-})
-```
-
-## 📦 Installation & Setup
+## 📦 Installation
 
 ### Prerequisites
 
 - **Bun** >= 1.2.18 ([Install Bun](https://bun.sh/docs/installation))
 
-### Installation
+### Install Bungate
 
 ```bash
 # Using Bun (recommended)
@@ -584,77 +264,169 @@ npm install bungate
 yarn add bungate
 ```
 
-## 🚀 Getting Started
+---
 
-### Basic Setup
+## 📚 Documentation
 
-```bash
-# Create a new project
-mkdir my-gateway && cd my-gateway
-bun init
+### **[📖 Complete Documentation](./docs/DOCUMENTATION.md)**
 
-# Install BunGate
-bun add bungate
+**Getting Started:**
 
-# Create your gateway
-touch gateway.ts
-```
+- **[Quick Start Guide](./docs/QUICK_START.md)** - Get up and running in 5 minutes
+- **[Examples](./docs/EXAMPLES.md)** - Real-world use cases and patterns
 
-### Configuration Examples
+**Core Features:**
 
-#### Simple Gateway with Auth
+- **[Load Balancing](./docs/LOAD_BALANCING.md)** - 8+ strategies and configuration
+- **[Clustering](./docs/CLUSTERING.md)** - Multi-process scaling
+- **[Authentication](./docs/AUTHENTICATION.md)** - JWT, API keys, OAuth2
+
+**Security:**
+
+- **[Security Guide](./docs/SECURITY.md)** - Enterprise security features
+- **[TLS Configuration](./docs/TLS_CONFIGURATION.md)** - HTTPS setup
+
+**Reference:**
+
+- **[API Reference](./docs/API_REFERENCE.md)** - Complete API documentation
+- **[Troubleshooting](./docs/TROUBLESHOOTING.md)** - Common issues and solutions
+
+---
+
+## 🏗️ Real-World Examples
+
+### Microservices Gateway
 
 ```typescript
-import { BunGateway, BunGateLogger } from 'bungate'
-
-const logger = new BunGateLogger({
-  level: 'info',
-  format: 'pretty',
-  enableRequestLogging: true,
-})
+import { BunGateway } from 'bungate'
 
 const gateway = new BunGateway({
-  server: { port: 3000 },
-
-  // Global authentication
+  server: { port: 8080 },
+  cluster: { enabled: true, workers: 4 },
   auth: {
     secret: process.env.JWT_SECRET,
-    jwtOptions: {
-      algorithms: ['HS256'],
-      issuer: 'https://auth.myapp.com',
-    },
-    excludePaths: ['/health', '/metrics', '/auth/*'],
+    excludePaths: ['/health', '/auth/*'],
   },
-
-  // Enable metrics
-  metrics: { enabled: true },
-  // Enable logging
-  logger,
+  cors: {
+    origin: ['https://myapp.com', 'https://admin.myapp.com'],
+    credentials: true,
+  },
 })
 
-// Add authenticated routes
+// User service
 gateway.addRoute({
-  pattern: '/api/users/*',
+  pattern: '/users/*',
   target: 'http://user-service:3001',
-  rateLimit: {
-    max: 100,
-    windowMs: 60000,
-  },
+  rateLimit: { max: 100, windowMs: 60000 },
 })
 
-// Add public routes with API key authentication
+// Payment service with circuit breaker
 gateway.addRoute({
-  pattern: '/api/public/*',
-  target: 'http://public-service:3002',
-  auth: {
-    apiKeys: ['public-key-1', 'public-key-2'],
-    apiKeyHeader: 'x-api-key',
+  pattern: '/payments/*',
+  target: 'http://payment-service:3002',
+  circuitBreaker: {
+    enabled: true,
+    failureThreshold: 3,
   },
 })
 
 await gateway.listen()
-console.log('🚀 Bungate running on http://localhost:3000')
 ```
+
+**👉 [More Examples](./docs/EXAMPLES.md)**
+
+---
+
+## 🔧 Advanced Features
+
+### Custom Middleware
+
+```typescript
+gateway.addRoute({
+  pattern: '/api/*',
+  target: 'http://backend:3000',
+  middlewares: [
+    async (req, next) => {
+      // Custom logic before request
+      console.log('Request:', req.method, req.url)
+      const response = await next()
+      // Custom logic after response
+      console.log('Response:', response.status)
+      return response
+    },
+  ],
+})
+```
+
+### Circuit Breaker with Fallback
+
+```typescript
+gateway.addRoute({
+  pattern: '/api/*',
+  target: 'http://backend:3000',
+  circuitBreaker: {
+    enabled: true,
+    failureThreshold: 5,
+    timeout: 10000,
+    resetTimeout: 30000,
+  },
+  hooks: {
+    onError: async (req, error) => {
+      // Return cached data or fallback response
+      return new Response(
+        JSON.stringify({ cached: true, data: getCachedData() }),
+        { status: 200 },
+      )
+    },
+  },
+})
+```
+
+### Rate Limiting by User
+
+```typescript
+gateway.addRoute({
+  pattern: '/api/*',
+  target: 'http://backend:3000',
+  auth: {
+    secret: process.env.JWT_SECRET,
+    jwtOptions: { algorithms: ['HS256'] },
+  },
+  rateLimit: {
+    max: 1000,
+    windowMs: 60000,
+    keyGenerator: (req) => (req as any).user?.id || 'anonymous',
+  },
+})
+```
+
+---
+
+## 📊 Benchmarks
+
+Bungate delivers exceptional performance:
+
+- **18K+ requests/second** with load balancing
+- **Single-digit millisecond** average latency
+- **Sub-30ms** 99th percentile response times
+- **Lower memory footprint** vs alternatives
+
+See detailed [benchmark results](./benchmark) comparing Bungate with Nginx and Envoy.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please check out our [contributing guidelines](./CONTRIBUTING.md) (if available).
+
+### Reporting Issues
+
+Found a bug or have a feature request?
+
+- 🐛 **[Report Issues](https://github.com/BackendStack21/bungate/issues)**
+- 💬 **[Discussions](https://github.com/BackendStack21/bungate/discussions)**
+
+---
 
 ## 📄 License
 
@@ -662,10 +434,20 @@ MIT Licensed - see [LICENSE](LICENSE) for details.
 
 ---
 
+## 🌟 Star History
+
+If you find Bungate useful, please consider giving it a star on GitHub!
+
+[![Star History Chart](https://api.star-history.com/svg?repos=BackendStack21/bungate&type=Date)](https://star-history.com/#BackendStack21/bungate&Date)
+
+---
+
 <div align="center">
 
 **Built with ❤️ by [21no.de](https://21no.de) for the JavaScript Community**
 
-[🏠 Homepage](https://github.com/BackendStack21/bungate) | [📚 Documentation](https://github.com/BackendStack21/bungate#readme) | [🐛 Issues](https://github.com/BackendStack21/bungate/issues) | [💬 Discussions](https://github.com/BackendStack21/bungate/discussions)
+[🏠 Homepage](https://bungate.21no.de) | [📚 Documentation](./docs/DOCUMENTATION.md) | [🐛 Issues](https://github.com/BackendStack21/bungate/issues) | [💬 Discussions](https://github.com/BackendStack21/bungate/discussions)
+
+⭐ **[Star on GitHub](https://github.com/BackendStack21/bungate)** ⭐
 
 </div>

@@ -644,6 +644,24 @@ describe('Hooks E2E Tests', () => {
       },
     } as Parameters<typeof Bun.serve>[0])
 
+    // Wait for the failing server to be ready
+    let failingServerReady = false
+    for (let i = 0; i < 20; i++) {
+      try {
+        const healthCheck = await fetch(`http://localhost:${asyncFailingPort}/`)
+        if (healthCheck.status === 200) {
+          failingServerReady = true
+          break
+        }
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      }
+    }
+    if (!failingServerReady) {
+      asyncFailingServer.stop()
+      throw new Error('Failing server failed to start')
+    }
+
     // Create a new gateway with async onError hook
     const asyncGatewayPort = Math.floor(Math.random() * 10000) + 53000
     const asyncGateway = new BunGateway({
@@ -694,8 +712,28 @@ describe('Hooks E2E Tests', () => {
     asyncGateway.addRoute(asyncRouteConfig)
     const asyncServer = await asyncGateway.listen(asyncGatewayPort)
 
-    // Allow the server a brief moment to be fully ready in slower CI environments
-    await new Promise((resolve) => setTimeout(resolve, 250))
+    // Wait for the gateway server to be ready
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    // Wait for the gateway server to be ready with proper health check
+    let gatewayReady = false
+    for (let i = 0; i < 20; i++) {
+      try {
+        const healthCheck = await fetch(
+          `http://localhost:${asyncGatewayPort}/api/async-fallback/`,
+        )
+        // Any response (even error) means the server is ready
+        gatewayReady = true
+        break
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      }
+    }
+    if (!gatewayReady) {
+      asyncServer.stop()
+      asyncFailingServer.stop()
+      throw new Error('Gateway server failed to start')
+    }
 
     try {
       const testRequestId = `test-${Date.now()}`
@@ -722,5 +760,5 @@ describe('Hooks E2E Tests', () => {
       asyncServer.stop()
       asyncFailingServer.stop()
     }
-  }, 20000)
+  }, 30000)
 })

@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Bungate - The Lightning-Fast HTTP Gateway & Load Balancer for the Modern Web. Built on Bun for maximum performance."
+      content="Bungate - Lightning-Fast HTTP Gateway with Enterprise Security. TLS 1.3, JWT key rotation, input validation, OWASP Top 10 protection, 8+ load balancing algorithms, and zero-config simplicity. Built on Bun for maximum performance."
     />
     <meta
       name="keywords"
-      content="bungate, bun, gateway, load balancer, http, microservices, api gateway, typescript"
+      content="bungate, bun, gateway, load balancer, http, microservices, api gateway, typescript, security, tls, https, jwt, api keys, oauth2, input validation, rate limiting, circuit breaker, clustering, zero downtime"
     />
     <title>Bungate - Lightning-Fast HTTP Gateway & Load Balancer</title>
     <link rel="icon" type="image/png" href="bungate-logo.png" />
@@ -23,8 +23,13 @@
           <a href="#" class="logo"> </a>
           <nav class="nav-links">
             <a href="https://github.com/BackendStack21/bungate">GitHub</a>
-            <a href="https://github.com/BackendStack21/bungate#readme"
+            <a
+              href="https://github.com/BackendStack21/bungate/blob/main/docs/DOCUMENTATION.md"
               >Documentation</a
+            >
+            <a
+              href="https://github.com/BackendStack21/bungate/blob/main/docs/SECURITY.md"
+              >Security</a
             >
             <a href="https://www.npmjs.com/package/bungate">npm</a>
             <a href="https://github.com/BackendStack21/bungate/issues"
@@ -49,10 +54,10 @@
           Zero config, maximum performance.
         </p>
         <div class="hero-features animate-in">
-          <span class="hero-feature">Single-digit millisecond latency</span>
-          <span class="hero-feature">8+ Load Balancing Algorithms</span>
-          <span class="hero-feature">Circuit Breaker & Health Checks</span>
-          <span class="hero-feature">Zero Config Required</span>
+          <span class="hero-feature">🚀 Single-digit ms latency</span>
+          <span class="hero-feature">🧠 8+ Load Balancing Algorithms</span>
+          <span class="hero-feature">🔒 TLS 1.3 + Security Hardening</span>
+          <span class="hero-feature">⚡ Zero Config Required</span>
         </div>
         <div class="cta-buttons animate-in">
           <a
@@ -62,9 +67,19 @@
           >
           <a href="#get-started" class="btn btn-secondary">Get Started</a>
           <a
+            href="https://github.com/BackendStack21/bungate/blob/main/docs/DOCUMENTATION.md"
+            class="btn btn-secondary"
+            >Documentation</a
+          >
+          <a
             href="https://github.com/BackendStack21/bungate/tree/main/benchmark"
             class="btn btn-secondary"
             >Benchmarks</a
+          >
+          <a
+            href="https://github.com/BackendStack21/bungate/blob/main/docs/SECURITY.md"
+            class="btn btn-secondary"
+            >Security</a
           >
         </div>
       </div>
@@ -128,12 +143,12 @@
           </div>
           <div class="feature-card">
             <div class="feature-icon">🔐</div>
-            <h3>Enterprise Authentication</h3>
+            <h3>Enterprise Security</h3>
             <p>
-              JWT with JWKS support, API keys, OAuth2/OIDC integration. Custom
-              token extraction, role-based authorization, and mixed
-              authentication modes. Production-ready security without extra
-              dependencies.
+              Production-grade security with TLS/HTTPS, input validation, CSRF
+              protection, security headers, JWT key rotation, and trusted proxy
+              validation. Built-in protection against injection attacks,
+              information disclosure, and DoS attacks.
             </p>
           </div>
         </div>
@@ -417,6 +432,433 @@ console.<span class="code-function">log</span>(<span class="code-string">'🚀 B
       </div>
     </section>
 
+    <!-- Security Showcase Section -->
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">🔐 Enterprise Security Built-In</h2>
+        <p class="section-subtitle">
+          Production-grade security features that protect against OWASP Top 10
+          threats
+        </p>
+
+        <!-- Security Feature Tabs -->
+        <div class="security-showcase">
+          <!-- TLS/HTTPS -->
+          <div class="security-demo">
+            <div class="security-demo-header">
+              <h3>🔒 TLS 1.3 with Auto HTTP Redirect</h3>
+              <p>Encrypted communications with automatic HTTPS upgrade</p>
+            </div>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">tls-gateway.ts</span>
+                <button class="copy-btn" onclick="copyCodeBlock(this)">
+                  📋 Copy
+                </button>
+              </div>
+              <pre><code><span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
+  server: { port: <span class="code-number">443</span> },
+  security: {
+    tls: {
+      enabled: <span class="code-keyword">true</span>,
+      cert: <span class="code-string">'./cert.pem'</span>,
+      key: <span class="code-string">'./key.pem'</span>,
+      minVersion: <span class="code-string">'TLSv1.3'</span>,
+      cipherSuites: [
+        <span class="code-string">'TLS_AES_256_GCM_SHA384'</span>,
+        <span class="code-string">'TLS_CHACHA20_POLY1305_SHA256'</span>,
+      ],
+      redirectHTTP: <span class="code-keyword">true</span>,  <span class="code-comment">// Auto-redirect :80 → :443</span>
+      redirectPort: <span class="code-number">80</span>,
+    },
+  },
+})
+
+<span class="code-comment">// All traffic now encrypted with TLS 1.3! 🔐</span></code></pre>
+            </div>
+            <div class="security-benefits">
+              <span class="benefit">✓ Man-in-the-Middle Protection</span>
+              <span class="benefit">✓ Automatic HTTP → HTTPS</span>
+              <span class="benefit">✓ Strong Cipher Suites</span>
+            </div>
+          </div>
+
+          <!-- JWT Authentication -->
+          <div class="security-demo">
+            <div class="security-demo-header">
+              <h3>🎫 JWT with Zero-Downtime Key Rotation</h3>
+              <p>
+                Secure authentication with automatic key rotation and JWKS
+                support
+              </p>
+            </div>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">jwt-auth.ts</span>
+                <button class="copy-btn" onclick="copyCodeBlock(this)">
+                  📋 Copy
+                </button>
+              </div>
+              <pre><code><span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
+  security: {
+    jwtKeyRotation: {
+      secrets: [
+        { 
+          key: process.env.<span class="code-function">JWT_SECRET_NEW</span>, 
+          algorithm: <span class="code-string">'HS256'</span>,
+          kid: <span class="code-string">'2024-11'</span>,
+          primary: <span class="code-keyword">true</span>  <span class="code-comment">// New tokens use this</span>
+        },
+        { 
+          key: process.env.<span class="code-function">JWT_SECRET_OLD</span>, 
+          algorithm: <span class="code-string">'HS256'</span>,
+          kid: <span class="code-string">'2024-10'</span>,
+          deprecated: <span class="code-keyword">true</span>  <span class="code-comment">// Still validates old tokens</span>
+        },
+      ],
+      jwksUri: <span class="code-string">'https://auth.example.com/.well-known/jwks.json'</span>,
+      jwksRefreshInterval: <span class="code-number">3600000</span>,  <span class="code-comment">// 1 hour</span>
+    },
+  },
+})
+
+gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/api/*'</span>,
+  target: <span class="code-string">'http://backend:3000'</span>,
+  auth: {
+    secret: process.env.<span class="code-function">JWT_SECRET_NEW</span>,
+    jwtOptions: {
+      algorithms: [<span class="code-string">'HS256'</span>, <span class="code-string">'RS256'</span>],
+      issuer: <span class="code-string">'https://auth.example.com'</span>,
+    },
+  },
+})</code></pre>
+            </div>
+            <div class="security-benefits">
+              <span class="benefit">✓ Zero-Downtime Rotation</span>
+              <span class="benefit">✓ JWKS Auto-Refresh</span>
+              <span class="benefit">✓ Multi-Algorithm Support</span>
+            </div>
+          </div>
+
+          <!-- Input Validation -->
+          <div class="security-demo">
+            <div class="security-demo-header">
+              <h3>🛡️ Input Validation & Sanitization</h3>
+              <p>Protection against injection attacks and malformed data</p>
+            </div>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">input-validation.ts</span>
+                <button class="copy-btn" onclick="copyCodeBlock(this)">
+                  📋 Copy
+                </button>
+              </div>
+              <pre><code><span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
+  security: {
+    inputValidation: {
+      maxPathLength: <span class="code-number">2048</span>,
+      maxHeaderSize: <span class="code-number">16384</span>,
+      maxHeaderCount: <span class="code-number">100</span>,
+      allowedPathChars: <span class="code-regex">/^[a-zA-Z0-9\/_\-\.~%]+$/</span>,
+      blockedPatterns: [
+        <span class="code-regex">/\.\./</span>,           <span class="code-comment">// Directory traversal</span>
+        <span class="code-regex">/%00/</span>,           <span class="code-comment">// Null byte injection</span>
+        <span class="code-regex">/&lt;script&gt;/i</span>,     <span class="code-comment">// XSS attempts</span>
+        <span class="code-regex">/javascript:/i</span>,  <span class="code-comment">// JavaScript protocol</span>
+      ],
+      sanitizeHeaders: <span class="code-keyword">true</span>,
+    },
+    sizeLimits: {
+      maxBodySize: <span class="code-number">10</span> * <span class="code-number">1024</span> * <span class="code-number">1024</span>,  <span class="code-comment">// 10 MB</span>
+      maxUrlLength: <span class="code-number">2048</span>,
+    },
+  },
+})
+
+<span class="code-comment">// Requests with '../../../etc/passwd' → Blocked! 🚫</span>
+<span class="code-comment">// Requests with '&lt;script&gt;alert(1)&lt;/script&gt;' → Blocked! 🚫</span></code></pre>
+            </div>
+            <div class="security-benefits">
+              <span class="benefit">✓ Path Traversal Protection</span>
+              <span class="benefit">✓ XSS Prevention</span>
+              <span class="benefit">✓ DoS Protection</span>
+            </div>
+          </div>
+
+          <!-- Security Headers -->
+          <div class="security-demo">
+            <div class="security-demo-header">
+              <h3>📋 Comprehensive Security Headers</h3>
+              <p>HSTS, CSP, X-Frame-Options, and more automatically applied</p>
+            </div>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">security-headers.ts</span>
+                <button class="copy-btn" onclick="copyCodeBlock(this)">
+                  📋 Copy
+                </button>
+              </div>
+              <pre><code><span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
+  security: {
+    securityHeaders: {
+      enabled: <span class="code-keyword">true</span>,
+      hsts: {
+        maxAge: <span class="code-number">31536000</span>,        <span class="code-comment">// 1 year</span>
+        includeSubDomains: <span class="code-keyword">true</span>,
+        preload: <span class="code-keyword">true</span>,
+      },
+      contentSecurityPolicy: {
+        directives: {
+          <span class="code-string">'default-src'</span>: [<span class="code-string">"'self'"</span>],
+          <span class="code-string">'script-src'</span>: [<span class="code-string">"'self'"</span>],
+          <span class="code-string">'style-src'</span>: [<span class="code-string">"'self'"</span>],
+          <span class="code-string">'frame-ancestors'</span>: [<span class="code-string">"'none'"</span>],
+        },
+      },
+      xFrameOptions: <span class="code-string">'DENY'</span>,
+      xContentTypeOptions: <span class="code-keyword">true</span>,
+      referrerPolicy: <span class="code-string">'strict-origin-when-cross-origin'</span>,
+    },
+  },
+})
+
+<span class="code-comment">// Every response gets security headers automatically! 🛡️</span></code></pre>
+            </div>
+            <div class="security-benefits">
+              <span class="benefit">✓ Clickjacking Protection</span>
+              <span class="benefit">✓ XSS Mitigation</span>
+              <span class="benefit">✓ MIME Sniffing Prevention</span>
+            </div>
+          </div>
+
+          <!-- Trusted Proxies -->
+          <div class="security-demo">
+            <div class="security-demo-header">
+              <h3>🌐 Trusted Proxy Validation</h3>
+              <p>Secure client IP extraction with CDN support</p>
+            </div>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">trusted-proxies.ts</span>
+                <button class="copy-btn" onclick="copyCodeBlock(this)">
+                  📋 Copy
+                </button>
+              </div>
+              <pre><code><span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
+  security: {
+    trustedProxies: {
+      enabled: <span class="code-keyword">true</span>,
+      trustedIPs: [
+        <span class="code-string">'10.0.0.0/8'</span>,      <span class="code-comment">// Private network</span>
+        <span class="code-string">'172.16.0.0/12'</span>,   <span class="code-comment">// Private network</span>
+      ],
+      trustedNetworks: [
+        <span class="code-string">'cloudflare'</span>,     <span class="code-comment">// Cloudflare IPs</span>
+        <span class="code-string">'aws'</span>,            <span class="code-comment">// AWS CloudFront</span>
+        <span class="code-string">'gcp'</span>,            <span class="code-comment">// Google Cloud CDN</span>
+        <span class="code-string">'azure'</span>,          <span class="code-comment">// Azure CDN</span>
+      ],
+      maxForwardedDepth: <span class="code-number">3</span>,
+    },
+  },
+})
+
+<span class="code-comment">// Prevents IP spoofing attacks! 🎯</span>
+<span class="code-comment">// Only trusts X-Forwarded-For from verified proxies</span></code></pre>
+            </div>
+            <div class="security-benefits">
+              <span class="benefit">✓ IP Spoofing Prevention</span>
+              <span class="benefit">✓ CDN Support Built-In</span>
+              <span class="benefit">✓ CIDR Notation</span>
+            </div>
+          </div>
+
+          <!-- Complete Security Example -->
+          <div class="security-demo">
+            <div class="security-demo-header">
+              <h3>🏰 Complete Security-Hardened Gateway</h3>
+              <p>All security features combined for maximum protection</p>
+            </div>
+            <div class="code-container">
+              <div class="code-header">
+                <span class="code-title">production-gateway.ts</span>
+                <button class="copy-btn" onclick="copyCodeBlock(this)">
+                  📋 Copy
+                </button>
+              </div>
+              <pre><code id="security-code-block"><span class="code-keyword">import</span> { BunGateway } <span class="code-keyword">from</span> <span class="code-string">'bungate'</span>
+
+<span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
+  server: { port: <span class="code-number">443</span> },
+  security: {
+    <span class="code-comment">// TLS/HTTPS</span>
+    tls: {
+      enabled: <span class="code-keyword">true</span>,
+      cert: process.env.<span class="code-function">TLS_CERT</span>,
+      key: process.env.<span class="code-function">TLS_KEY</span>,
+      minVersion: <span class="code-string">'TLSv1.3'</span>,
+      redirectHTTP: <span class="code-keyword">true</span>,
+      redirectPort: <span class="code-number">80</span>,
+    },
+    <span class="code-comment">// Input validation</span>
+    inputValidation: {
+      maxPathLength: <span class="code-number">2048</span>,
+      sanitizeHeaders: <span class="code-keyword">true</span>,
+      blockedPatterns: [<span class="code-regex">/\.\./</span>, <span class="code-regex">/%00/</span>, <span class="code-regex">/&lt;script&gt;/i</span>],
+    },
+    <span class="code-comment">// Security headers</span>
+    securityHeaders: {
+      enabled: <span class="code-keyword">true</span>,
+      hsts: { maxAge: <span class="code-number">31536000</span>, preload: <span class="code-keyword">true</span> },
+      contentSecurityPolicy: {
+        directives: {
+          <span class="code-string">'default-src'</span>: [<span class="code-string">"'self'"</span>],
+          <span class="code-string">'frame-ancestors'</span>: [<span class="code-string">"'none'"</span>],
+        },
+      },
+      xFrameOptions: <span class="code-string">'DENY'</span>,
+    },
+    <span class="code-comment">// Size limits</span>
+    sizeLimits: {
+      maxBodySize: <span class="code-number">10</span> * <span class="code-number">1024</span> * <span class="code-number">1024</span>,
+      maxUrlLength: <span class="code-number">2048</span>,
+    },
+    <span class="code-comment">// Trusted proxies</span>
+    trustedProxies: {
+      enabled: <span class="code-keyword">true</span>,
+      trustedNetworks: [<span class="code-string">'cloudflare'</span>, <span class="code-string">'aws'</span>],
+    },
+    <span class="code-comment">// JWT key rotation</span>
+    jwtKeyRotation: {
+      secrets: [
+        { key: process.env.<span class="code-function">JWT_NEW</span>, primary: <span class="code-keyword">true</span> },
+        { key: process.env.<span class="code-function">JWT_OLD</span>, deprecated: <span class="code-keyword">true</span> },
+      ],
+    },
+  },
+})
+
+gateway.<span class="code-function">addRoute</span>({
+  pattern: <span class="code-string">'/api/*'</span>,
+  target: <span class="code-string">'http://backend:3000'</span>,
+  auth: {
+    secret: process.env.<span class="code-function">JWT_NEW</span>,
+    jwtOptions: { algorithms: [<span class="code-string">'HS256'</span>] },
+  },
+  rateLimit: {
+    max: <span class="code-number">1000</span>,
+    windowMs: <span class="code-number">60000</span>,
+  },
+})
+
+<span class="code-keyword">await</span> gateway.<span class="code-function">listen</span>()
+console.<span class="code-function">log</span>(<span class="code-string">'🔒 Production gateway secured!'</span>)</code></pre>
+            </div>
+            <div class="security-benefits">
+              <span class="benefit">✓ OWASP Top 10 Protection</span>
+              <span class="benefit">✓ PCI DSS Compliant</span>
+              <span class="benefit">✓ Zero-Config Security</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security Features Section -->
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">🔐 Production-Grade Security</h2>
+        <p class="section-subtitle">
+          Comprehensive security hardening to protect against modern threats
+        </p>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3>TLS/HTTPS Support</h3>
+            <p>
+              Full TLS 1.2+ support with configurable cipher suites, automatic
+              HTTP to HTTPS redirection, and certificate validation. Protect
+              against man-in-the-middle attacks with encrypted communications.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3>Input Validation</h3>
+            <p>
+              Comprehensive input validation and sanitization for paths,
+              headers, and query parameters. Protection against injection
+              attacks, directory traversal, and malformed data with
+              RFC-compliant validation.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔐</div>
+            <h3>Security Headers</h3>
+            <p>
+              Automatic security headers including HSTS, CSP, X-Frame-Options,
+              X-Content-Type-Options, and Referrer-Policy. Configurable Content
+              Security Policy with report-only mode for testing.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🎫</div>
+            <h3>JWT Key Rotation</h3>
+            <p>
+              Support for multiple JWT secrets with automatic key rotation. JWKS
+              endpoint integration with automatic refresh, zero-downtime key
+              updates, and deprecation warnings for monitoring.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔍</div>
+            <h3>Trusted Proxy Validation</h3>
+            <p>
+              Secure client IP extraction with trusted proxy configuration. CIDR
+              notation support, predefined trusted networks (Cloudflare, AWS,
+              GCP, Azure), and forwarded header chain validation.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🚫</div>
+            <h3>CSRF Protection</h3>
+            <p>
+              Built-in Cross-Site Request Forgery protection with automatic
+              token generation and validation. Configurable for state-changing
+              operations with path-based exclusions.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📏</div>
+            <h3>Request Size Limits</h3>
+            <p>
+              Configurable limits for request body, headers, URL length, and
+              query parameters. Protection against resource exhaustion and DoS
+              attacks with early rejection and appropriate HTTP status codes.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔐</div>
+            <h3>Secure Session Management</h3>
+            <p>
+              Cryptographically secure session ID generation with minimum 128
+              bits of entropy. Automatic expiration, secure cookie attributes
+              (Secure, HttpOnly, SameSite), and session validation.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⚠️</div>
+            <h3>Secure Error Handling</h3>
+            <p>
+              Production-safe error responses that prevent information
+              disclosure. Sanitized error messages, no stack traces in
+              production, and comprehensive internal logging for debugging.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Middleware Section -->
     <section class="section">
       <div class="container">
@@ -505,16 +947,16 @@ console.<span class="code-function">log</span>(<span class="code-string">'🚀 B
             <div class="stat-label">Requests per Second</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value">🎯 Zero</div>
-            <div class="stat-label">Config Required</div>
+            <div class="stat-value">🔒 TLS 1.2+</div>
+            <div class="stat-label">Encrypted Communications</div>
           </div>
           <div class="stat-item">
             <div class="stat-value">🧠 8+</div>
             <div class="stat-label">Load Balancing Strategies</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value">🔐 Multi</div>
-            <div class="stat-label">Auth Methods (JWT/JWKS/OAuth2)</div>
+            <div class="stat-value">🛡️ Built-in</div>
+            <div class="stat-label">Security Hardening</div>
           </div>
         </div>
       </div>
@@ -529,9 +971,14 @@ console.<span class="code-function">log</span>(<span class="code-string">'🚀 B
         </p>
         <div class="cta-buttons">
           <a
-            href="https://github.com/BackendStack21/bungate/blob/main/README.md"
+            href="https://github.com/BackendStack21/bungate/blob/main/docs/DOCUMENTATION.md"
             class="btn btn-primary"
             >Read the Documentation</a
+          >
+          <a
+            href="https://github.com/BackendStack21/bungate"
+            class="btn btn-secondary"
+            >View on GitHub</a
           >
         </div>
       </div>
@@ -543,10 +990,22 @@ console.<span class="code-function">log</span>(<span class="code-string">'🚀 B
         <div class="footer-content">
           <div class="footer-links">
             <a href="https://github.com/BackendStack21/bungate">GitHub</a>
-            <a href="https://github.com/BackendStack21/bungate/issues"
-              >Report Issues</a
+            <a
+              href="https://github.com/BackendStack21/bungate/blob/main/docs/DOCUMENTATION.md"
+              >Documentation</a
+            >
+            <a
+              href="https://github.com/BackendStack21/bungate/blob/main/docs/SECURITY.md"
+              >Security</a
+            >
+            <a
+              href="https://github.com/BackendStack21/bungate/blob/main/docs/TLS_CONFIGURATION.md"
+              >TLS Guide</a
             >
             <a href="https://www.npmjs.com/package/bungate">npm</a>
+            <a href="https://github.com/BackendStack21/bungate/issues"
+              >Issues</a
+            >
             <a
               href="https://github.com/BackendStack21/bungate/blob/main/benchmark/README.md"
               >Benchmarks</a
@@ -578,6 +1037,30 @@ console.<span class="code-function">log</span>(<span class="code-string">'🚀 B
               copyBtn.innerHTML = originalText
               copyBtn.style.background = 'var(--bg-secondary)'
               copyBtn.style.color = 'var(--text-secondary)'
+            }, 2000)
+          })
+          .catch((err) => {
+            console.error('Failed to copy:', err)
+          })
+      }
+
+      function copyCodeBlock(button) {
+        const codeContainer = button.closest('.code-container')
+        const codeBlock = codeContainer.querySelector('code')
+        const textToCopy = codeBlock.innerText
+
+        navigator.clipboard
+          .writeText(textToCopy)
+          .then(() => {
+            const originalText = button.innerHTML
+            button.innerHTML = '✓ Copied!'
+            button.style.background = 'var(--accent-primary)'
+            button.style.color = 'white'
+
+            setTimeout(() => {
+              button.innerHTML = originalText
+              button.style.background = 'var(--bg-secondary)'
+              button.style.color = 'var(--text-secondary)'
             }, 2000)
           })
           .catch((err) => {

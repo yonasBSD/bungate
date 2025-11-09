@@ -35,7 +35,12 @@ import type {
 } from '../interfaces/load-balancer'
 import type { Logger } from '../interfaces/logger'
 import { defaultLogger } from '../logger/pino-logger'
-import * as crypto from 'crypto'
+import { SessionManager } from '../security/session-manager'
+import {
+  generateSecureRandomWithEntropy,
+  hasMinimumEntropy,
+} from '../security/utils'
+import type { TrustedProxyValidator } from '../security/trusted-proxy'
 
 /**
  * Internal target representation with runtime tracking data
@@ -55,6 +60,9 @@ interface InternalTarget extends LoadBalancerTarget {
 /**
  * Session tracking for sticky session functionality
  * Maintains client-to-target affinity for stateful applications
+ *
+ * Note: This interface is kept for backward compatibility.
+ * New implementations should use SessionManager from security module.
  */
 interface Session {
   /** Target URL this session is bound to */
@@ -86,8 +94,12 @@ export class HttpLoadBalancer implements LoadBalancer {
   private sessions = new Map<string, Session>()
   /** Session cleanup interval timer */
   private sessionCleanupInterval?: Timer
+  /** Session manager for cryptographically secure session handling */
+  private sessionManager?: SessionManager
   /** Logger instance for monitoring and debugging */
   private logger: Logger
+  /** Trusted proxy validator for secure client IP extraction */
+  private trustedProxyValidator?: TrustedProxyValidator
 
   /**
    * Initialize the load balancer with configuration and start background services
@@ -97,12 +109,14 @@ export class HttpLoadBalancer implements LoadBalancer {
   constructor(config: LoadBalancerConfig) {
     this.config = { ...config }
     this.logger = config.logger ?? defaultLogger
+    this.trustedProxyValidator = config.trustedProxyValidator
 
     this.logger.info('Load balancer initialized', {
       strategy: config.strategy,
       targetCount: config.targets.length,
       healthCheckEnabled: config.healthCheck?.enabled,
       stickySessionEnabled: config.stickySession?.enabled,
+      trustedProxyEnabled: !!this.trustedProxyValidator,
     })
 
     // Initialize all configured targets
@@ -117,6 +131,12 @@ export class HttpLoadBalancer implements LoadBalancer {
 
     // Start session management if sticky sessions are enabled
     if (config.stickySession?.enabled) {
+      // Initialize SessionManager for cryptographically secure session handling
+      this.sessionManager = new SessionManager({
+        entropyBits: 128, // Minimum required entropy
+        ttl: config.stickySession.ttl ?? 3600000,
+        cookieName: config.stickySession.cookieName ?? 'lb-session',
+      })
       this.startSessionCleanup()
     }
   }
@@ -433,6 +453,12 @@ export class HttpLoadBalancer implements LoadBalancer {
       this.sessionCleanupInterval = undefined
     }
 
+    // Cleanup session manager
+    if (this.sessionManager) {
+      this.sessionManager.destroy()
+      this.sessionManager = undefined
+    }
+
     this.targets.clear()
     this.sessions.clear()
   }
@@ -635,13 +661,64 @@ export class HttpLoadBalancer implements LoadBalancer {
   }
 
   private generateSessionId(): string {
-    const randomPart = crypto.randomBytes(16).toString('hex') // 16 bytes = 32 hex characters
-    const timestampPart = Date.now().toString(36)
-    return randomPart + timestampPart
+    // Use SessionManager if available for cryptographically secure session IDs
+    if (this.sessionManager) {
+      return this.sessionManager.generateSessionId()
+    }
+
+    // Fallback: Generate with minimum 128 bits of entropy
+    // 16 bytes = 128 bits, hex encoding = 32 characters
+    const sessionId = generateSecureRandomWithEntropy(128)
+
+    // Validate entropy meets minimum requirement
+    if (!hasMinimumEntropy(sessionId, 128)) {
+      throw new Error(
+        'Generated session ID does not meet minimum 128-bit entropy requirement',
+      )
+    }
+
+    return sessionId
   }
 
   private getClientId(request: Request): string {
-    // Prefer real client IP headers commonly set by proxies/CDNs; fallback to UA+Accept
+    // If trusted proxy validator is enabled, use it for secure IP extraction
+    if (this.trustedProxyValidator) {
+      const headers = request.headers
+
+      // Get the direct connection IP (fallback to headers for now)
+      const directIP =
+        headers.get('x-real-ip') ||
+        headers.get('cf-connecting-ip') ||
+        headers.get('x-client-ip') ||
+        'unknown'
+
+      // Use trusted proxy validator to extract client IP
+      const clientIP = this.trustedProxyValidator.extractClientIP(
+        request,
+        directIP,
+      )
+
+      // Log suspicious forwarded headers from untrusted proxies
+      const xForwardedFor =
+        headers.get('x-forwarded-for') || headers.get('X-Forwarded-For')
+      if (
+        xForwardedFor &&
+        !this.trustedProxyValidator.validateProxy(directIP)
+      ) {
+        this.logger.warn(
+          'Suspicious forwarded header from untrusted proxy in load balancer',
+          {
+            xForwardedFor,
+            directIP,
+            extractedIP: clientIP,
+          },
+        )
+      }
+
+      return clientIP
+    }
+
+    // Fallback to legacy behavior if trusted proxy validator is not enabled
     const headers = request.headers
     const xff = headers.get('x-forwarded-for') || headers.get('X-Forwarded-For')
     if (xff) {
@@ -744,10 +821,17 @@ export class HttpLoadBalancer implements LoadBalancer {
     // Clean up expired sessions every 5 minutes
     this.sessionCleanupInterval = setInterval(() => {
       const now = Date.now()
+
+      // Clean up legacy sessions map
       for (const [sessionId, session] of this.sessions.entries()) {
         if (now > session.expiresAt) {
           this.sessions.delete(sessionId)
         }
+      }
+
+      // SessionManager has its own cleanup, but we can trigger it explicitly
+      if (this.sessionManager) {
+        this.sessionManager.cleanupExpiredSessions()
       }
     }, 300000)
   }

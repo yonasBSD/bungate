@@ -150,6 +150,12 @@ export interface LoadBalancerConfig {
    * Logger instance for load balancer operations and debugging
    */
   logger?: Logger
+
+  /**
+   * Trusted proxy validator for secure client IP extraction
+   * Used for IP-based strategies and session affinity
+   */
+  trustedProxyValidator?: any // Using any to avoid circular dependency
 }
 
 export interface LoadBalancerStats {

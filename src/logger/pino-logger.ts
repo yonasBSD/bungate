@@ -61,6 +61,49 @@ export class BunGateLogger implements Logger {
     const pinoConfig: any = {
       level: this.config.level,
       ...config,
+      // Redact sensitive information from logs
+      redact: {
+        paths: [
+          // API Keys
+          'apiKey',
+          'api_key',
+          '*.apiKey',
+          '*.api_key',
+          'headers.apiKey',
+          'headers.api_key',
+          'headers["x-api-key"]',
+          'headers["X-API-Key"]',
+          'headers["X-Api-Key"]',
+          'headers.authorization',
+          'headers.Authorization',
+          // JWT tokens
+          'token',
+          'accessToken',
+          'access_token',
+          'refreshToken',
+          'refresh_token',
+          'jwt',
+          '*.token',
+          '*.jwt',
+          // Passwords and secrets
+          'password',
+          'passwd',
+          'secret',
+          'privateKey',
+          'private_key',
+          '*.password',
+          '*.secret',
+          // Credit card data
+          'creditCard',
+          'cardNumber',
+          'cvv',
+          'ccv',
+          // Other sensitive fields
+          'ssn',
+          'social_security',
+        ],
+        censor: '[REDACTED]',
+      },
     }
 
     // Configure pretty printing for development
@@ -88,6 +131,105 @@ export class BunGateLogger implements Logger {
     this.pino = pino(pinoConfig)
   }
 
+  /**
+   * Sanitizes sensitive data from objects before logging
+   * Provides an additional layer of protection beyond Pino's redaction
+   */
+  private sanitizeData(data: any): any {
+    if (!data || typeof data !== 'object') {
+      return data
+    }
+
+    // Create a shallow copy to avoid mutating the original
+    const sanitized = Array.isArray(data) ? [...data] : { ...data }
+
+    // List of sensitive field names (case-insensitive patterns)
+    const sensitiveKeys = [
+      'apikey',
+      'api_key',
+      'x-api-key',
+      'authorization',
+      'token',
+      'accesstoken',
+      'access_token',
+      'refreshtoken',
+      'refresh_token',
+      'jwt',
+      'password',
+      'passwd',
+      'secret',
+      'privatekey',
+      'private_key',
+      'creditcard',
+      'cardnumber',
+      'cvv',
+      'ccv',
+      'ssn',
+      'social_security',
+    ]
+
+    for (const key in sanitized) {
+      if (Object.prototype.hasOwnProperty.call(sanitized, key)) {
+        const lowerKey = key.toLowerCase()
+
+        // Check if key matches sensitive patterns
+        if (sensitiveKeys.some((pattern) => lowerKey.includes(pattern))) {
+          sanitized[key] = '[REDACTED]'
+        }
+        // Recursively sanitize nested objects
+        else if (
+          typeof sanitized[key] === 'object' &&
+          sanitized[key] !== null
+        ) {
+          sanitized[key] = this.sanitizeData(sanitized[key])
+        }
+      }
+    }
+
+    return sanitized
+  }
+
+  /**
+   * Sanitizes message strings that might contain sensitive information
+   * Looks for common patterns of exposed secrets in log messages
+   */
+  private sanitizeMessage(message: string | undefined): string | undefined {
+    if (!message || typeof message !== 'string') {
+      return message
+    }
+
+    // Pattern to match common API key/token formats in strings
+    // This catches patterns like: "apiKey: abc123", "token=xyz", "Bearer token123", etc.
+    const sensitivePatterns = [
+      // API keys with various formats
+      /\b(api[_-]?key|apikey)[\s:=]+[^\s,}\]]+/gi,
+      // Bearer tokens
+      /\bBearer\s+[^\s,}\]]+/gi,
+      // Token assignments
+      /\b(token|jwt|access[_-]?token|refresh[_-]?token)[\s:=]+[^\s,}\]]+/gi,
+      // Password assignments
+      /\b(password|passwd|pwd)[\s:=]+[^\s,}\]]+/gi,
+      // Secret assignments
+      /\b(secret|private[_-]?key)[\s:=]+[^\s,}\]]+/gi,
+      // Generic key-value patterns with sensitive keys
+      /["']?(apiKey|api_key|token|password|secret)["']?\s*[:=]\s*["']?[^"',}\]\s]+/gi,
+    ]
+
+    let sanitized = message
+    for (const pattern of sensitivePatterns) {
+      sanitized = sanitized.replace(pattern, (match) => {
+        // Keep the key name but redact the value
+        const colonIndex = match.search(/[:=]/)
+        if (colonIndex !== -1) {
+          return match.substring(0, colonIndex + 1) + ' [REDACTED]'
+        }
+        return '[REDACTED]'
+      })
+    }
+
+    return sanitized
+  }
+
   getSerializers(): LoggerOptions['serializers'] | undefined {
     return this.config.serializers
   }
@@ -99,9 +241,13 @@ export class BunGateLogger implements Logger {
     dataOrMsg?: Record<string, any> | string,
   ): void {
     if (typeof msgOrObj === 'string') {
-      this.pino.info(dataOrMsg || {}, msgOrObj)
+      const sanitizedData = this.sanitizeData(dataOrMsg || {})
+      const sanitizedMsg = this.sanitizeMessage(msgOrObj)
+      this.pino.info(sanitizedData, sanitizedMsg)
     } else {
-      this.pino.info(msgOrObj, dataOrMsg as string)
+      const sanitizedObj = this.sanitizeData(msgOrObj)
+      const sanitizedMsg = this.sanitizeMessage(dataOrMsg as string)
+      this.pino.info(sanitizedObj, sanitizedMsg)
     }
   }
 
@@ -112,9 +258,13 @@ export class BunGateLogger implements Logger {
     dataOrMsg?: Record<string, any> | string,
   ): void {
     if (typeof msgOrObj === 'string') {
-      this.pino.debug(dataOrMsg || {}, msgOrObj)
+      const sanitizedData = this.sanitizeData(dataOrMsg || {})
+      const sanitizedMsg = this.sanitizeMessage(msgOrObj)
+      this.pino.debug(sanitizedData, sanitizedMsg)
     } else {
-      this.pino.debug(msgOrObj, dataOrMsg as string)
+      const sanitizedObj = this.sanitizeData(msgOrObj)
+      const sanitizedMsg = this.sanitizeMessage(dataOrMsg as string)
+      this.pino.debug(sanitizedObj, sanitizedMsg)
     }
   }
 
@@ -125,9 +275,13 @@ export class BunGateLogger implements Logger {
     dataOrMsg?: Record<string, any> | string,
   ): void {
     if (typeof msgOrObj === 'string') {
-      this.pino.warn(dataOrMsg || {}, msgOrObj)
+      const sanitizedData = this.sanitizeData(dataOrMsg || {})
+      const sanitizedMsg = this.sanitizeMessage(msgOrObj)
+      this.pino.warn(sanitizedData, sanitizedMsg)
     } else {
-      this.pino.warn(msgOrObj, dataOrMsg as string)
+      const sanitizedObj = this.sanitizeData(msgOrObj)
+      const sanitizedMsg = this.sanitizeMessage(dataOrMsg as string)
+      this.pino.warn(sanitizedObj, sanitizedMsg)
     }
   }
 
@@ -151,9 +305,13 @@ export class BunGateLogger implements Logger {
             }
           : {}),
       }
-      this.pino.error(errorData, msgOrObj)
+      const sanitizedData = this.sanitizeData(errorData)
+      const sanitizedMsg = this.sanitizeMessage(msgOrObj)
+      this.pino.error(sanitizedData, sanitizedMsg)
     } else {
-      this.pino.error(msgOrObj, errorOrMsg as string)
+      const sanitizedObj = this.sanitizeData(msgOrObj)
+      const sanitizedMsg = this.sanitizeMessage(errorOrMsg as string)
+      this.pino.error(sanitizedObj, sanitizedMsg)
     }
   }
 

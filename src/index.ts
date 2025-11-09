@@ -125,6 +125,15 @@ export { ClusterManager } from './cluster/cluster-manager'
  */
 export * from './interfaces/index'
 
+// ==================== SECURITY MODULE ====================
+
+/**
+ * Comprehensive security features for production-grade API gateway
+ * Includes TLS/HTTPS, input validation, error handling, session management,
+ * trusted proxy validation, security headers, CSRF protection, and more
+ */
+export * from './security/index'
+
 // ==================== DEFAULT EXPORT ====================
 
 /**

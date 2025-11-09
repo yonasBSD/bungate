@@ -63,6 +63,13 @@ import { createGatewayProxy } from '../proxy/gateway-proxy'
 import { HttpLoadBalancer } from '../load-balancer/http-load-balancer'
 import type { ProxyInstance } from '../interfaces/proxy'
 import { ClusterManager } from '../cluster/cluster-manager'
+import { TLSManager, createTLSManager } from '../security/tls-manager'
+import { mergeSecurityConfig, validateSecurityConfig } from '../security/config'
+import { HTTPRedirectManager } from '../security/http-redirect'
+import {
+  TrustedProxyValidator,
+  createTrustedProxyValidator,
+} from '../security/trusted-proxy'
 
 /**
  * Production-grade API Gateway implementation
@@ -85,6 +92,12 @@ export class BunGateway implements Gateway {
   private clusterManager: ClusterManager | null = null
   /** Flag indicating if this process is the cluster master */
   private isClusterMaster: boolean = false
+  /** TLS manager for HTTPS support */
+  private tlsManager: TLSManager | null = null
+  /** HTTP redirect manager for automatic HTTPS upgrade */
+  private httpRedirectManager: HTTPRedirectManager | null = null
+  /** Trusted proxy validator for secure client IP extraction */
+  private trustedProxyValidator: TrustedProxyValidator | null = null
 
   /**
    * Initialize the API Gateway with comprehensive configuration
@@ -97,6 +110,36 @@ export class BunGateway implements Gateway {
   constructor(config: GatewayConfig = {}) {
     this.config = config
     this.isClusterMaster = !process.env.CLUSTER_WORKER
+
+    // Merge and validate security configuration
+    if (this.config.security) {
+      this.config.security = mergeSecurityConfig(this.config.security)
+      const validation = validateSecurityConfig(this.config.security)
+      if (!validation.valid && validation.errors) {
+        throw new Error(
+          `Security configuration validation failed: ${validation.errors.join(', ')}`,
+        )
+      }
+    }
+
+    // Initialize TLS manager if TLS is enabled
+    if (this.config.security?.tls?.enabled) {
+      this.tlsManager = createTLSManager(this.config.security.tls)
+      const tlsValidation = this.tlsManager.validateConfig()
+      if (!tlsValidation.valid && tlsValidation.errors) {
+        throw new Error(
+          `TLS configuration validation failed: ${tlsValidation.errors.join(', ')}`,
+        )
+      }
+    }
+
+    // Initialize trusted proxy validator if enabled
+    if (this.config.security?.trustedProxies?.enabled) {
+      this.trustedProxyValidator = createTrustedProxyValidator(
+        this.config.security.trustedProxies,
+        this.config.logger,
+      )
+    }
 
     // Initialize cluster manager for multi-process deployment
     if (this.config.cluster?.enabled && this.isClusterMaster) {
@@ -128,6 +171,49 @@ export class BunGateway implements Gateway {
         serializers: config.logger?.getSerializers(),
       }),
     )
+
+    // Add size limiter middleware if configured
+    if (this.config.security?.sizeLimits) {
+      const {
+        createSizeLimiterMiddleware,
+      } = require('../security/size-limiter-middleware')
+      this.router.use(
+        createSizeLimiterMiddleware({
+          limits: this.config.security.sizeLimits,
+        }),
+      )
+    }
+
+    // Add input validation middleware if configured
+    if (this.config.security?.inputValidation) {
+      const {
+        createValidationMiddleware,
+      } = require('../security/validation-middleware')
+      this.router.use(
+        createValidationMiddleware({
+          rules: this.config.security.inputValidation,
+        }),
+      )
+    }
+
+    // Add security headers middleware if configured
+    if (this.config.security?.securityHeaders?.enabled !== false) {
+      const {
+        SecurityHeadersMiddleware,
+      } = require('../security/security-headers')
+      // Use the merged security config which has proper defaults
+      const headersConfig = this.config.security?.securityHeaders || {}
+      const securityHeaders = new SecurityHeadersMiddleware(headersConfig)
+
+      // Wrap the response to apply security headers
+      this.router.use(async (req: ZeroRequest, next) => {
+        const response = await next()
+        const url = new URL(req.url)
+        const isHttps =
+          url.protocol === 'https:' || this.config.security?.tls?.enabled
+        return securityHeaders.applyHeaders(response, isHttps)
+      })
+    }
 
     // Add Prometheus metrics middleware if enabled and NOT in development
     if (
@@ -219,14 +305,10 @@ export class BunGateway implements Gateway {
 
     for (const method of methods) {
       // Build middleware chain for this route
+      // Security-critical middleware should run before custom route middleware
       const middlewares: RequestHandler[] = []
 
-      // Add route-specific middlewares first
-      if (route.middlewares) {
-        middlewares.push(...route.middlewares)
-      }
-
-      // Add CORS middleware if configured
+      // Add CORS middleware if configured (must be early for preflight requests)
       if (this.config.cors) {
         const corsOptions: CORSOptions = {
           origin: this.config.cors.origin,
@@ -239,25 +321,40 @@ export class BunGateway implements Gateway {
         middlewares.push(createCORS(corsOptions))
       }
 
-      // Add authentication middleware if configured
+      // Add authentication middleware if configured (before custom middleware)
       if (route.auth) {
-        const jwtOptions: JWTAuthOptions = {
-          secret: route.auth.secret,
-          jwksUri: route.auth.jwksUri,
-          jwtOptions: {
-            algorithms: route.auth.algorithms,
-            issuer: route.auth.issuer,
-            audience: route.auth.audience,
-          },
-          optional: route.auth.optional,
-          excludePaths: route.auth.excludePaths,
+        // Pass through all authentication options to support both JWT and API key auth
+        // When jwtOptions is provided, merge root-level and nested options
+        const { jwtOptions: routeJwtOptions, ...authRest } = route.auth
+
+        const jwtOptions = routeJwtOptions
+          ? {
+              // When jwtOptions is provided, merge everything at root level
+              ...authRest,
+              ...routeJwtOptions,
+            }
+          : {
+              // Fallback to root-level properties
+              ...authRest,
+            }
+
+        // Convert string secret to Uint8Array for HMAC algorithms (jose library requirement)
+        // RSA/ECDSA keys should be passed as CryptoKey or KeyLike objects
+        if (jwtOptions.secret && typeof jwtOptions.secret === 'string') {
+          jwtOptions.secret = new TextEncoder().encode(jwtOptions.secret)
         }
-        middlewares.push(createJWTAuth(jwtOptions))
+
+        middlewares.push(createJWTAuth(jwtOptions as JWTAuthOptions))
       }
 
-      // Add rate limiting middleware if configured
+      // Add rate limiting middleware if configured (before custom middleware)
       if (route.rateLimit) {
         middlewares.push(createRateLimit(route.rateLimit))
+      }
+
+      // Add route-specific middlewares after security middleware
+      if (route.middlewares) {
+        middlewares.push(...route.middlewares)
       }
 
       // Create load balancer if configured
@@ -270,6 +367,7 @@ export class BunGateway implements Gateway {
         loadBalancer = new HttpLoadBalancer({
           logger: this.config.logger?.child({ component: 'HttpLoadBalancer' }),
           ...route.loadBalancer,
+          trustedProxyValidator: this.trustedProxyValidator || undefined,
         })
         this.loadBalancers.set(balancerKey, loadBalancer)
       }
@@ -431,7 +529,43 @@ export class BunGateway implements Gateway {
   }
 
   private getClientIP(req: ZeroRequest): string {
-    // Try various headers for client IP
+    // If trusted proxy validator is enabled, use it for secure IP extraction
+    if (this.trustedProxyValidator) {
+      // Get the direct connection IP (in Bun, this would come from the socket)
+      // For now, we'll try to extract from headers as a fallback
+      const headers = req.headers
+      const directIP =
+        headers.get('x-real-ip') ||
+        headers.get('cf-connecting-ip') ||
+        headers.get('x-client-ip') ||
+        'unknown'
+
+      // Use trusted proxy validator to extract client IP
+      const clientIP = this.trustedProxyValidator.extractClientIP(
+        req as Request,
+        directIP,
+      )
+
+      // Log suspicious forwarded headers
+      const xForwardedFor = headers.get('x-forwarded-for')
+      if (
+        xForwardedFor &&
+        !this.trustedProxyValidator.validateProxy(directIP)
+      ) {
+        this.config.logger?.warn(
+          'Suspicious forwarded header from untrusted proxy',
+          {
+            xForwardedFor,
+            directIP,
+            extractedIP: clientIP,
+          },
+        )
+      }
+
+      return clientIP
+    }
+
+    // Fallback to legacy behavior if trusted proxy validator is not enabled
     const headers = req.headers
     return (
       headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -465,20 +599,62 @@ export class BunGateway implements Gateway {
       return new Promise(() => {}) as Promise<Server>
     }
 
+    // Load and validate TLS certificates if enabled
+    if (this.tlsManager) {
+      this.config.logger?.info('Loading TLS certificates')
+      await this.tlsManager.loadCertificates()
+
+      const certValidation = await this.tlsManager.validateCertificates()
+      if (!certValidation.valid && certValidation.errors) {
+        throw new Error(
+          `TLS certificate validation failed: ${certValidation.errors.join(', ')}`,
+        )
+      }
+
+      this.config.logger?.info('TLS certificates loaded successfully')
+    }
+
     // Worker process or single process mode
-    this.server = Bun.serve({
+    const serverOptions: any = {
       port: listenPort,
       fetch: this.fetch,
       // Enable port sharing for cluster mode
       reusePort: !!process.env.CLUSTER_WORKER,
-    })
+    }
+
+    // Add TLS options if enabled
+    if (this.tlsManager) {
+      const tlsOptions = this.tlsManager.getTLSOptions()
+      if (tlsOptions) {
+        serverOptions.tls = tlsOptions
+        this.config.logger?.info('HTTPS server enabled with TLS')
+      }
+    }
+
+    this.server = Bun.serve(serverOptions)
+
+    // Start HTTP redirect server if enabled
+    if (this.tlsManager?.isRedirectEnabled()) {
+      const redirectPort = this.tlsManager.getRedirectPort()
+      if (redirectPort) {
+        this.httpRedirectManager = new HTTPRedirectManager({
+          port: redirectPort,
+          httpsPort: listenPort,
+          logger: this.config.logger,
+        })
+        this.httpRedirectManager.start()
+      }
+    }
 
     if (process.env.CLUSTER_WORKER) {
       this.config.logger?.info(
         `Worker ${process.env.CLUSTER_WORKER_ID} listening on port ${listenPort}`,
       )
     } else {
-      this.config.logger?.info(`Server listening on port ${listenPort}`)
+      const protocol = this.tlsManager ? 'https' : 'http'
+      this.config.logger?.info(
+        `Server listening on ${protocol}://localhost:${listenPort}`,
+      )
     }
 
     return this.server
@@ -489,6 +665,12 @@ export class BunGateway implements Gateway {
       // In cluster mode, the cluster manager handles shutdown
       // This will be handled by the cluster manager's signal handlers
       return
+    }
+
+    // Stop HTTP redirect server if running
+    if (this.httpRedirectManager) {
+      this.httpRedirectManager.stop()
+      this.httpRedirectManager = null
     }
 
     if (this.server) {
