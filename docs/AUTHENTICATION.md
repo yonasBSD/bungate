@@ -699,28 +699,6 @@ curl -v http://localhost:3000/api/data
 curl -v http://localhost:3000/public/data
 ```
 
-## Known Limitations
-
-### JWT-Only Authentication Issue
-
-⚠️ **Current Issue**: JWT-only authentication (without `apiKeys` configured) has validation issues. Tokens may be rejected even when correctly signed.
-
-**Workaround**: Use API key authentication for reliable service-to-service communication:
-
-```typescript
-// ❌ JWT-only (has issues)
-auth: {
-  secret: 'my-secret',
-  jwtOptions: { algorithms: ['HS256'] },
-}
-
-// ✅ API key (works reliably)
-auth: {
-  apiKeys: ['service-key-1', 'service-key-2'],
-  apiKeyHeader: 'X-API-Key',
-}
-```
-
 ## Troubleshooting
 
 ### 401 Unauthorized with Valid API Key

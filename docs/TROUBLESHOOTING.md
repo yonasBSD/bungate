@@ -64,23 +64,7 @@ curl -v -H "Authorization: Bearer key1" http://localhost:3000/api/data
 
 ### JWT Validation Fails
 
-**Known Limitation**: JWT-only authentication (without `apiKeys`) has validation issues.
-
-**Workaround**: Use API key authentication:
-
-```typescript
-// ❌ JWT-only (has issues)
-auth: {
-  secret: 'my-secret',
-  jwtOptions: { algorithms: ['HS256'] },
-}
-
-// ✅ Use API keys instead (reliable)
-auth: {
-  apiKeys: ['service-key-1', 'service-key-2'],
-  apiKeyHeader: 'X-API-Key',
-}
-```
+### Mixed Authentication
 
 **If you must use JWT**, check:
 

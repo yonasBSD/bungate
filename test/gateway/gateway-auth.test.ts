@@ -59,19 +59,6 @@ async function createJWTWithWrongSecret(
     .sign(wrongSecret)
 }
 
-/**
- * KNOWN LIMITATION: JWT-only authentication (without apiKeys) currently doesn't work.
- * When a route is configured with JWT auth but no API keys, token validation fails
- * with "Invalid token" even when the token is correctly signed and structured.
- *
- * This appears to be an issue with how JWT options are passed to the 0http-bun middleware
- * or how the middleware validates tokens. API key authentication works correctly, and
- * hybrid auth (JWT + API key) works when API key is provided.
- *
- * Tests marked with .skip are temporarily disabled until this issue is resolved.
- * See: GitHub issue #TBD
- */
-
 describe('BunGateway Authentication', () => {
   let gateway: BunGateway
   let backendServer: any

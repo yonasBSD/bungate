@@ -49,8 +49,6 @@ Production-ready security-hardened gateway with comprehensive security features.
 - API key authentication for public/metrics endpoints
 - Multiple authentication strategies
 
-**⚠️ Known Limitation:** JWT-only authentication (without API keys) currently has validation issues. The example uses API keys which work reliably.
-
 **Run:**
 
 ```bash
@@ -324,48 +322,6 @@ gateway.addRoute({
     apiKeyHeader: 'X-Admin-Key',
   },
 })
-```
-
----
-
-## ⚠️ Known Limitations
-
-### JWT-Only Authentication
-
-**Issue:** JWT-only authentication (configuring `secret` without `apiKeys`) currently has token validation issues. Tokens may be rejected with "Invalid token" even when correctly signed.
-
-**Workaround:** Use API key authentication, which works reliably:
-
-```typescript
-// ❌ JWT-only (has issues)
-auth: {
-  secret: process.env.JWT_SECRET,
-  jwtOptions: {
-    algorithms: ['HS256'],
-  },
-}
-
-// ✅ API key auth (works)
-auth: {
-  apiKeys: ['key1', 'key2'],
-  apiKeyHeader: 'X-API-Key',
-}
-```
-
-**Status:** This issue is being investigated. See [test/gateway/gateway-auth.test.ts](../test/gateway/gateway-auth.test.ts) for test coverage.
-
-### Hybrid Authentication
-
-When both JWT (`secret`) and API keys (`apiKeys`) are configured together, the API key becomes **required**. JWT alone will not work.
-
-```typescript
-// API key is REQUIRED when both are configured
-auth: {
-  secret: process.env.JWT_SECRET,
-  jwtOptions: { algorithms: ['HS256'] },
-  apiKeys: ['key1'], // API key must be provided
-  apiKeyHeader: 'X-API-Key',
-}
 ```
 
 ---
