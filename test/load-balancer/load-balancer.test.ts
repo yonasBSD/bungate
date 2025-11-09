@@ -1583,7 +1583,9 @@ describe('HttpLoadBalancer', () => {
 
       const balancer = new HttpLoadBalancer(config)
 
-      const generateSessionId = (balancer as any).generateSessionId
+      const generateSessionId = (balancer as any).generateSessionId.bind(
+        balancer,
+      )
 
       // Generate multiple session IDs
       const ids = Array.from({ length: 100 }, () => generateSessionId())

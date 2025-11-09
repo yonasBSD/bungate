@@ -138,3 +138,9 @@ dist
 lib/
 
 results/
+
+.kiro/
+
+.vscode/
+
+.plan.md

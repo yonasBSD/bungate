@@ -8,6 +8,7 @@ import type {
 } from './middleware'
 import type { ProxyOptions } from './proxy'
 import type { Logger } from './logger'
+import type { SecurityConfig } from '../security/config'
 
 /**
  * Cluster configuration for multi-process gateway deployment
@@ -266,6 +267,12 @@ export interface GatewayConfig {
      */
     collectDefaultMetrics?: boolean
   }
+
+  /**
+   * Security configuration for the gateway
+   * Includes TLS, input validation, error handling, and more
+   */
+  security?: SecurityConfig
 }
 
 /**
