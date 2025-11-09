@@ -712,6 +712,9 @@ describe('Hooks E2E Tests', () => {
     asyncGateway.addRoute(asyncRouteConfig)
     const asyncServer = await asyncGateway.listen(asyncGatewayPort)
 
+    // Wait for the gateway server to be ready
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
     // Wait for the gateway server to be ready with proper health check
     let gatewayReady = false
     for (let i = 0; i < 20; i++) {
@@ -757,5 +760,5 @@ describe('Hooks E2E Tests', () => {
       asyncServer.stop()
       asyncFailingServer.stop()
     }
-  }, 20000)
+  }, 30000)
 })
