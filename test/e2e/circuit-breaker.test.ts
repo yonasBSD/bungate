@@ -171,7 +171,7 @@ describe('Circuit Breaker E2E', () => {
     })
 
     await gateway.listen()
-    await new Promise((r) => setTimeout(r, 200))
+    await new Promise((r) => setTimeout(r, 1000))
 
     try {
       const response = await fetch(
