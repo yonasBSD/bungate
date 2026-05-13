@@ -11,1109 +11,376 @@
       name="keywords"
       content="bungate, bun, gateway, load balancer, http, microservices, api gateway, typescript, security, tls, https, jwt, api keys, oauth2, input validation, rate limiting, circuit breaker, clustering, zero downtime"
     />
-    <title>Bungate - Lightning-Fast HTTP Gateway & Load Balancer</title>
-    <link rel="icon" type="image/png" href="bungate-logo.png" />
-    <link rel="canonical" href="https://bungate.21no.de" />
     <meta name="author" content="21no.de" />
     <meta name="theme-color" content="#0a0a0b" />
+    <meta name="robots" content="index, follow" />
+    <title>Bungate — Lightning-Fast HTTP Gateway & Load Balancer</title>
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://assets.21no.de; font-src 'self' https://assets.21no.de; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'" />
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://bungate.21no.de" />
-    <meta property="og:title" content="Bungate - Lightning-Fast HTTP Gateway &amp; Load Balancer" />
-    <meta property="og:description" content="Bungate - Lightning-Fast HTTP Gateway with Enterprise Security. TLS 1.3, JWT key rotation, input validation, OWASP Top 10 protection, 8+ load balancing algorithms, and zero-config simplicity. Built on Bun for maximum performance." />
+    <meta property="og:url" content="https://bungate.21no.de/" />
+    <meta property="og:title" content="Bungate — Lightning-Fast HTTP Gateway & Load Balancer" />
+    <meta property="og:description" content="Enterprise-grade HTTP gateway built on Bun. TLS 1.3, JWT, 8+ load balancing strategies, circuit breakers, and zero-config simplicity." />
     <meta property="og:image" content="https://21no.de/logo-v2.png" />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
     <meta property="og:image:alt" content="21no.de logo" />
-    <meta property="og:site_name" content="Bungate" />
+    <meta property="og:site_name" content="21no.de" />
     <meta property="og:locale" content="en_US" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Bungate - Lightning-Fast HTTP Gateway &amp; Load Balancer" />
-    <meta name="twitter:description" content="Bungate - Lightning-Fast HTTP Gateway with Enterprise Security. TLS 1.3, JWT key rotation, input validation, OWASP Top 10 protection, 8+ load balancing algorithms, and zero-config simplicity. Built on Bun for maximum performance." />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Bungate — Lightning-Fast HTTP Gateway & Load Balancer" />
+    <meta name="twitter:description" content="Enterprise-grade HTTP gateway built on Bun. TLS 1.3, JWT, 8+ load balancing strategies, circuit breakers, and zero-config simplicity." />
     <meta name="twitter:image" content="https://21no.de/logo-v2.png" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'" />
-    <link rel="stylesheet" href="style.css" />
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": ["Organization", "WebSite"],
-  "name": "Bungate",
-  "url": "https://bungate.21no.de",
-  "description": "Bungate - Lightning-Fast HTTP Gateway with Enterprise Security. TLS 1.3, JWT key rotation, input validation, OWASP Top 10 protection, 8+ load balancing algorithms, and zero-config simplicity. Built on Bun for maximum performance.",
-  "image": "https://21no.de/logo-v2.png",
-  "publisher": {
-    "@type": "Organization",
-    "name": "21no.de",
-    "url": "https://21no.de"
-  }
-}
-</script>
+
+    <link rel="canonical" href="https://bungate.21no.de/" />
+    <link rel="icon" type="image/png" href="bungate-logo.png" />
+
+    <!-- Shared Assets (self-hosted via assets.21no.de) -->
+    <link rel="stylesheet" href="https://assets.21no.de/fonts/fonts.css" />
+    <link rel="stylesheet" href="https://assets.21no.de/css/tokens.css" />
+    <link rel="stylesheet" href="https://assets.21no.de/css/base.css" />
+    <link rel="stylesheet" href="https://assets.21no.de/css/nav.css" />
+    <link rel="stylesheet" href="https://assets.21no.de/css/hero.css" />
+    <link rel="stylesheet" href="https://assets.21no.de/css/buttons.css" />
+    <link rel="stylesheet" href="https://assets.21no.de/css/cards.css" />
+    <link rel="stylesheet" href="https://assets.21no.de/css/footer.css" />
+
+    <style>
+      :root {
+        --bg-primary: #0a0a0b;
+        --bg-card: #16161a;
+        --border-subtle: rgba(255,255,255,0.06);
+        --border-card: rgba(255,255,255,0.08);
+        --text-primary: #ededef;
+        --text-secondary: #9b9ba3;
+        --text-tertiary: #6b6b75;
+        --accent: #38bdf8;
+        --accent-subtle: rgba(56,189,248,0.08);
+        --red: #f87171;
+        --green: #3dd68c;
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+        --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        --max-width: 1100px;
+      }
+
+      /* === Stats === */
+      .stats { display: flex; gap: 32px; justify-content: center; margin-top: 40px; flex-wrap: wrap; }
+      .stat { text-align: center; }
+      .stat .num { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--text-primary); }
+      .stat .label { font-size: 13px; color: var(--text-tertiary); margin-top: 4px; }
+
+      /* === Grid === */
+      .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+      @media (max-width: 900px) { .grid-3 { grid-template-columns: 1fr; } }
+
+      /* === Card icon === */
+      .card-icon.blue { background: var(--accent-subtle); color: var(--accent); }
+
+      /* === Section === */
+      .section-inner { max-width: var(--max-width); margin: 0 auto; padding: 80px 24px; }
+      .section-label { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+      .section-title { font-size: clamp(28px, 3.5vw, 40px); font-weight: 700; color: #fff; letter-spacing: -1px; line-height: 1.15; margin-bottom: 16px; }
+      .section-desc { font-size: 16px; color: var(--text-secondary); max-width: 640px; line-height: 1.6; margin-bottom: 48px; }
+
+      /* === Install box === */
+      .install-box { display: flex; flex-direction: column; gap: 12px; margin: 0 auto; max-width: 720px; }
+      .install-box .prompt { display: flex; align-items: center; gap: 10px; background: #111113; border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 14px 18px; font-family: var(--font-mono); font-size: 14px; color: var(--text-primary); }
+      .install-box .prompt .sigil { color: var(--accent); font-weight: 600; }
+      .install-box .prompt .command { color: var(--text-secondary); }
+
+      /* === Syntax highlighting === */
+      .kw { color: #c792ea; }
+      .fn { color: #82aaff; }
+      .str { color: #c3e88d; }
+      .cmt { color: #546e7a; font-style: italic; }
+      .num { color: #f78c6c; }
+
+      /* === Security rows === */
+      .security-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+      .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+      .badge.g { background: rgba(61,214,140,0.1); color: var(--green); border: 1px solid rgba(61,214,140,0.15); }
+      .badge.b { background: var(--accent-subtle); color: var(--accent); border: 1px solid rgba(56,189,248,0.15); }
+
+      /* === Responsive === */
+      @media (max-width: 640px) {
+        .stats { gap: 20px; }
+        .stat .num { font-size: 24px; }
+        .section-inner { padding: 48px 16px; }
+      }
+    </style>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://21no.de/#org",
+          "name": "21no.de",
+          "alternateName": "BackendStack21",
+          "url": "https://21no.de",
+          "logo": "https://21no.de/logo-v2.png",
+          "foundingDate": "2025",
+          "sameAs": ["https://github.com/BackendStack21"]
+        },
+        {
+          "@type": ["WebSite", "SoftwareApplication"],
+          "@id": "https://bungate.21no.de/#website",
+          "url": "https://bungate.21no.de",
+          "name": "Bungate — Lightning-Fast HTTP Gateway & Load Balancer",
+          "description": "Enterprise-grade HTTP gateway built on Bun. TLS 1.3, JWT, 8+ load balancing strategies, circuit breakers, and zero-config simplicity.",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Linux, macOS, Windows",
+          "publisher": { "@id": "https://21no.de/#org" }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
-    <!-- Header -->
-    <header>
-      <div class="container">
-        <div class="header-content">
-          <a href="#" class="logo"> </a>
-          <nav class="nav-links">
-            <a href="https://github.com/BackendStack21/bungate">GitHub</a>
-            <a
-              href="https://github.com/BackendStack21/bungate/blob/main/docs/DOCUMENTATION.md"
-              >Documentation</a
-            >
-            <a
-              href="https://github.com/BackendStack21/bungate/blob/main/docs/SECURITY.md"
-              >Security</a
-            >
-            <a href="https://www.npmjs.com/package/bungate">npm</a>
-            <a href="https://github.com/BackendStack21/bungate/issues"
-              >Issues</a
-            >
-          </nav>
+
+    <nav class="nav">
+      <div class="nav-inner">
+        <a href="https://21no.de" class="nav-logo">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="6" fill="#38bdf8"/>
+            <text x="14" y="20" text-anchor="middle" fill="#0a0a0b" font-family="system-ui" font-weight="700" font-size="16">21</text>
+          </svg>
+          21no.de
+        </a>
+        <div class="nav-links">
+          <a href="https://21no.de">Home</a>
+          <a href="https://github.com/BackendStack21/bungate" target="_blank" rel="noopener">GitHub</a>
         </div>
       </div>
-    </header>
+    </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-      <div class="container">
-        <div class="hero-badge">⚡ POWERED BY BUN'S NATIVE PERFORMANCE</div>
-        <h1 class="animate-in">
-          <span class="gradient-text">
-            <img src="bungate-logo.png" alt="Bungate Logo" class="logo-img" />
-          </span>
-        </h1>
-        <p class="hero-subtitle animate-in">
-          The Lightning-Fast HTTP Gateway & Load Balancer for the Modern Web.
-          Zero config, maximum performance.
-        </p>
-        <div class="hero-features animate-in">
-          <span class="hero-feature">🚀 Single-digit ms latency</span>
-          <span class="hero-feature">🧠 8+ Load Balancing Algorithms</span>
-          <span class="hero-feature">🔒 TLS 1.3 + Security Hardening</span>
-          <span class="hero-feature">⚡ Zero Config Required</span>
-        </div>
-        <div class="cta-buttons animate-in">
-          <a
-            href="https://github.com/BackendStack21/bungate"
-            class="btn btn-primary"
-            >View on GitHub</a
-          >
-          <a href="#get-started" class="btn btn-secondary">Get Started</a>
-          <a
-            href="https://github.com/BackendStack21/bungate/blob/main/docs/DOCUMENTATION.md"
-            class="btn btn-secondary"
-            >Documentation</a
-          >
-          <a
-            href="https://github.com/BackendStack21/bungate/tree/main/benchmark"
-            class="btn btn-secondary"
-            >Benchmarks</a
-          >
-          <a
-            href="https://github.com/BackendStack21/bungate/blob/main/docs/SECURITY.md"
-            class="btn btn-secondary"
-            >Security</a
-          >
-        </div>
+    <!-- Hero -->
+    <section class="hero" style="padding:120px 24px 100px;text-align:center;">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--accent-subtle);border:1px solid rgba(56,189,248,0.2);color:var(--accent);padding:6px 16px;border-radius:999px;font-size:13px;font-weight:500;margin-bottom:28px;">
+        <span style="width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite;"></span>
+        v1.0.0 · Open Source
+      </div>
+      <style>.hero-badge-dot { animation: pulse 2s infinite; } @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }</style>
+      <h1 style="font-size:clamp(40px,6vw,64px);font-weight:700;color:#fff;letter-spacing:-2px;line-height:1.05;margin-bottom:20px;">
+        Bungate — Lightning-Fast <span style="color:var(--accent);">HTTP Gateway</span>
+      </h1>
+      <p style="font-size:clamp(16px,2vw,20px);font-weight:300;color:var(--text-secondary);max-width:640px;margin:0 auto 40px;line-height:1.5;">
+        Enterprise-grade HTTP gateway & load balancer built on Bun. TLS 1.3, JWT key rotation, 8+ load balancing strategies, and zero-config simplicity.
+      </p>
+
+      <div class="hero-actions" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+        <a href="#get-started" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:var(--radius-md);font-size:15px;font-weight:500;text-decoration:none;background:var(--accent);color:#000;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          Get Started
+        </a>
+        <a href="https://github.com/BackendStack21/bungate" target="_blank" rel="noopener" class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:var(--radius-md);font-size:15px;font-weight:500;text-decoration:none;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-card);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat"><div class="num">18K+</div><div class="label">Requests / second</div></div>
+        <div class="stat"><div class="num">&lt;1ms</div><div class="label">Routing Overhead</div></div>
+        <div class="stat"><div class="num">8+</div><div class="label">LB Strategies</div></div>
+        <div class="stat"><div class="num">TLS 1.3</div><div class="label">Enterprise Security</div></div>
       </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="section">
-      <div class="container">
-        <h2 class="section-title">Why Choose Bungate?</h2>
-        <p class="section-subtitle">
-          Built for developers who demand performance without sacrificing
-          developer experience
-        </p>
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">🚀</div>
-            <h3>Bun-Native Performance</h3>
-            <p>
-              Optimized specifically for Bun's runtime with minimal overhead.
-              Achieves 18K+ requests/second with single-digit millisecond
-              average latency and sub-30ms 99th percentile response times in
-              production benchmarks.
-            </p>
+    <!-- Features -->
+    <section style="background:rgba(255,255,255,0.01);">
+      <div class="section-inner">
+        <div class="section-label">Why Bungate</div>
+        <h2 class="section-title">Built for developers who demand performance</h2>
+        <p class="section-desc">A gateway that combines Bun's native speed with enterprise security — no compromises, no config overhead.</p>
+
+        <div class="grid-3" style="margin-top:16px;">
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border-card);border-radius:var(--radius-md);padding:28px;">
+            <div class="card-icon blue" style="width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;">&#9889;</div>
+            <h4 style="font-size:16px;font-weight:600;color:#fff;margin-bottom:8px;">Bun-Native Performance</h4>
+            <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">Optimized for Bun's runtime. 18K+ req/s, single-digit ms latency, sub-30ms p99 response times in production benchmarks against nginx and envoy.</p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">🔧</div>
-            <h3>TypeScript First</h3>
-            <p>
-              Full TypeScript support with comprehensive type definitions for
-              all APIs. Enjoy excellent IDE autocomplete, type safety, and
-              inline documentation as you build.
-            </p>
+
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border-card);border-radius:var(--radius-md);padding:28px;">
+            <div class="card-icon blue" style="width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;">&#129504;</div>
+            <h4 style="font-size:16px;font-weight:600;color:#fff;margin-bottom:8px;">Smart Load Balancing</h4>
+            <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">Round-robin, least-connections, weighted, ip-hash, random, power-of-two-choices, latency, weighted-least-connections. Cookie-based sticky sessions.</p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">🎯</div>
-            <h3>Zero Config</h3>
-            <p>
-              Works out of the box with sensible defaults. Get started in
-              seconds without sacrificing power, flexibility, or performance.
-              Production-ready from day one.
-            </p>
+
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border-card);border-radius:var(--radius-md);padding:28px;">
+            <div class="card-icon blue" style="width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;">&#128274;</div>
+            <h4 style="font-size:16px;font-weight:600;color:#fff;margin-bottom:8px;">Enterprise Security</h4>
+            <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">TLS 1.3 with auto HTTP redirect, JWT key rotation with JWKS, input validation, CSRF protection, security headers, trusted proxy validation, OWASP Top 10 coverage.</p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">🧠</div>
-            <h3>Smart Load Balancing</h3>
-            <p>
-              8 intelligent strategies: round-robin, least-connections,
-              weighted, ip-hash, random, p2c (power-of-two-choices),
-              latency-based, and weighted-least-connections. Session affinity
-              with cookie-based persistence.
-            </p>
+        </div>
+
+        <div class="grid-3" style="margin-top:16px;">
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border-card);border-radius:var(--radius-md);padding:28px;">
+            <div class="card-icon blue" style="width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;">&#9000;</div>
+            <h4 style="font-size:16px;font-weight:600;color:#fff;margin-bottom:8px;">TypeScript First</h4>
+            <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">Complete type definitions for every API. IDE autocomplete, type safety, and inline documentation from <code style="font-family:var(--font-mono);font-size:13px;background:rgba(56,189,248,0.1);color:var(--accent);padding:2px 6px;border-radius:4px;">bun add bungate</code> to production.</p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">🛡️</div>
-            <h3>Production Ready</h3>
-            <p>
-              Circuit breakers, health checks, auto-failover, timeout
-              management, and graceful degradation. Built for reliability and
-              resilience in production environments.
-            </p>
+
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border-card);border-radius:var(--radius-md);padding:28px;">
+            <div class="card-icon blue" style="width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;">&#128295;</div>
+            <h4 style="font-size:16px;font-weight:600;color:#fff;margin-bottom:8px;">Production Ready</h4>
+            <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">Circuit breakers, health checks with configurable intervals, auto-failover, timeout management, cluster mode with zero-downtime rolling restarts. Built for reliability.</p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">🔐</div>
-            <h3>Enterprise Security</h3>
-            <p>
-              Production-grade security with TLS/HTTPS, input validation, CSRF
-              protection, security headers, JWT key rotation, and trusted proxy
-              validation. Built-in protection against injection attacks,
-              information disclosure, and DoS attacks.
-            </p>
+
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border-card);border-radius:var(--radius-md);padding:28px;">
+            <div class="card-icon blue" style="width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;">&#127919;</div>
+            <h4 style="font-size:16px;font-weight:600;color:#fff;margin-bottom:8px;">Zero Config</h4>
+            <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">Works out of the box with sensible defaults. Get started in seconds — production-ready from day one with Prometheus metrics, structured logging, and health endpoints.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Code Section -->
-    <section class="section code-section" id="get-started">
-      <div class="container">
-        <h2 class="section-title">Get Started in Seconds</h2>
-        <p class="section-subtitle">
-          Production-ready HTTP gateway with full TypeScript support and
-          intelligent load balancing
-        </p>
-        <div class="code-container">
-          <div class="code-header">
-            <span class="code-title">gateway.ts</span>
-            <button class="copy-btn" onclick="copyCode()">📋 Copy</button>
-          </div>
-          <pre><code id="code-block"><span class="code-comment">// Install: bun add bungate</span>
-<span class="code-keyword">import</span> { BunGateway } <span class="code-keyword">from</span> <span class="code-string">'bungate'</span>
+    <!-- Get Started -->
+    <section id="get-started">
+      <div class="section-inner">
+        <div class="section-label">Get Started</div>
+        <h2 class="section-title">Production-ready in seconds</h2>
+        <p class="section-desc">Install, configure, deploy. A complete API gateway with load balancing, auth, and security — from a single file.</p>
 
-<span class="code-comment">// Create gateway with cluster mode & auth</span>
-<span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
-  server: { port: <span class="code-number">3000</span> },
-  cluster: { 
-    enabled: <span class="code-keyword">true</span>, 
-    workers: <span class="code-number">4</span>  <span class="code-comment">// Multi-process</span>
-  },
-  auth: {
-    secret: process.env.<span class="code-function">JWT_SECRET</span>,
-    excludePaths: [<span class="code-string">'/health'</span>, <span class="code-string">'/auth/*'</span>],
-  },
-  metrics: { enabled: <span class="code-keyword">true</span> },
+        <div class="install-box">
+          <div class="prompt">
+            <span class="sigil">$</span>
+            <span class="command">bun add bungate</span>
+          </div>
+        </div>
+
+        <div class="install-box" style="margin-top:24px;">
+          <div class="prompt" style="display:block;padding:20px 24px;overflow-x:auto;white-space:pre;line-height:1.7;">
+<span class="cmt">// gateway.ts — production-ready in one file</span>
+<span class="kw">import</span> { BunGateway } <span class="kw">from</span> <span class="str">'bungate'</span>
+
+<span class="kw">const</span> gateway = <span class="kw">new</span> <span class="fn">BunGateway</span>({
+  server: { port: <span class="num">3000</span> },
+  cluster: { enabled: <span class="kw">true</span>, workers: <span class="num">4</span> },
+  auth: { secret: process.env.<span class="fn">JWT_SECRET</span> },
+  metrics: { enabled: <span class="kw">true</span> },
 })
 
-<span class="code-comment">// Intelligent load balancing with health checks</span>
-gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/api/*'</span>,
+gateway.<span class="fn">addRoute</span>({
+  pattern: <span class="str">'/api/*'</span>,
   loadBalancer: {
-    strategy: <span class="code-string">'least-connections'</span>,
+    strategy: <span class="str">'least-connections'</span>,
     targets: [
-      { url: <span class="code-string">'http://api1.example.com'</span> },
-      { url: <span class="code-string">'http://api2.example.com'</span> },
-      { url: <span class="code-string">'http://api3.example.com'</span> },
+      { url: <span class="str">'http://api1.example.com'</span> },
+      { url: <span class="str">'http://api2.example.com'</span> },
     ],
-    healthCheck: {
-      enabled: <span class="code-keyword">true</span>,
-      interval: <span class="code-number">15000</span>,
-      path: <span class="code-string">'/health'</span>,
-    },
+    healthCheck: { enabled: <span class="kw">true</span>, interval: <span class="num">15000</span>, path: <span class="str">'/health'</span> },
   },
-  circuitBreaker: { 
-    enabled: <span class="code-keyword">true</span>, 
-    failureThreshold: <span class="code-number">5</span> 
-  },
+  circuitBreaker: { enabled: <span class="kw">true</span>, failureThreshold: <span class="num">5</span> },
 })
 
-<span class="code-comment">// Rate limiting with JWT auth</span>
-gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/admin/*'</span>,
-  target: <span class="code-string">'http://admin.example.com'</span>,
-  rateLimit: {
-    max: <span class="code-number">100</span>,
-    windowMs: <span class="code-number">60000</span>,
-    keyGenerator: <span class="code-keyword">(req)</span> <span class="code-keyword">=></span> req.<span class="code-function">user</span>?.id || <span class="code-string">'unknown'</span>,
-  },
-})
-
-<span class="code-keyword">await</span> gateway.<span class="code-function">listen</span>()
-console.<span class="code-function">log</span>(<span class="code-string">'🚀 Bungate cluster running on :3000'</span>)</code></pre>
-        </div>
-      </div>
-    </section>
-
-    <!-- Load Balancing Algorithms Section -->
-    <section class="section">
-      <div class="container">
-        <h2 class="section-title">8+ Load Balancing Strategies</h2>
-        <p class="section-subtitle">
-          Choose the right algorithm for your traffic patterns and architecture
-        </p>
-
-        <div class="algorithms-grid">
-          <!-- Round Robin -->
-          <div class="algorithm-card">
-            <h3>🔄 Round Robin</h3>
-            <p class="algorithm-description">
-              Equal distribution across all targets. Perfect for stateless
-              services with uniform capacity.
-            </p>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">round-robin.ts</span>
-              </div>
-              <pre><code>gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/api/*'</span>,
-  loadBalancer: {
-    strategy: <span class="code-string">'round-robin'</span>,
-    targets: [
-      { url: <span class="code-string">'http://api1.example.com'</span> },
-      { url: <span class="code-string">'http://api2.example.com'</span> },
-      { url: <span class="code-string">'http://api3.example.com'</span> },
-    ],
-  },
-})</code></pre>
-            </div>
-          </div>
-
-          <!-- Least Connections -->
-          <div class="algorithm-card">
-            <h3>🎯 Least Connections</h3>
-            <p class="algorithm-description">
-              Route to the server with fewest active connections. Ideal for
-              variable request durations.
-            </p>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">least-connections.ts</span>
-              </div>
-              <pre><code>gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/api/*'</span>,
-  loadBalancer: {
-    strategy: <span class="code-string">'least-connections'</span>,
-    targets: [
-      { url: <span class="code-string">'http://api1.example.com'</span> },
-      { url: <span class="code-string">'http://api2.example.com'</span> },
-    ],
-  },
-})</code></pre>
-            </div>
-          </div>
-
-          <!-- Weighted -->
-          <div class="algorithm-card">
-            <h3>⚖️ Weighted</h3>
-            <p class="algorithm-description">
-              Distribute based on server capacity and weights. Perfect for
-              heterogeneous server specs.
-            </p>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">weighted.ts</span>
-              </div>
-              <pre><code>gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/api/*'</span>,
-  loadBalancer: {
-    strategy: <span class="code-string">'weighted'</span>,
-    targets: [
-      { url: <span class="code-string">'http://api1.example.com'</span>, weight: <span class="code-number">70</span> },
-      { url: <span class="code-string">'http://api2.example.com'</span>, weight: <span class="code-number">20</span> },
-      { url: <span class="code-string">'http://api3.example.com'</span>, weight: <span class="code-number">10</span> },
-    ],
-  },
-})</code></pre>
-            </div>
-          </div>
-
-          <!-- IP Hash -->
-          <div class="algorithm-card">
-            <h3>🔐 IP Hash</h3>
-            <p class="algorithm-description">
-              Consistent routing based on client IP. Maintains session affinity
-              for stateful applications.
-            </p>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">ip-hash.ts</span>
-              </div>
-              <pre><code>gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/app/*'</span>,
-  loadBalancer: {
-    strategy: <span class="code-string">'ip-hash'</span>,
-    targets: [
-      { url: <span class="code-string">'http://app1.example.com'</span> },
-      { url: <span class="code-string">'http://app2.example.com'</span> },
-    ],
-  },
-})</code></pre>
-            </div>
-          </div>
-
-          <!-- Random -->
-          <div class="algorithm-card">
-            <h3>🎲 Random</h3>
-            <p class="algorithm-description">
-              Randomized distribution for simple, even load. Low overhead with
-              good distribution.
-            </p>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">random.ts</span>
-              </div>
-              <pre><code>gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/api/*'</span>,
-  loadBalancer: {
-    strategy: <span class="code-string">'random'</span>,
-    targets: [
-      { url: <span class="code-string">'http://api1.example.com'</span> },
-      { url: <span class="code-string">'http://api2.example.com'</span> },
-    ],
-  },
-})</code></pre>
-            </div>
-          </div>
-
-          <!-- Power of Two Choices -->
-          <div class="algorithm-card">
-            <h3>🔀 Power of Two Choices (P2C)</h3>
-            <p class="algorithm-description">
-              Pick the better of two random targets by load/latency. Balances
-              efficiency with performance.
-            </p>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">p2c.ts</span>
-              </div>
-              <pre><code>gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/api/*'</span>,
-  loadBalancer: {
-    strategy: <span class="code-string">'p2c'</span>,
-    targets: [
-      { url: <span class="code-string">'http://api1.example.com'</span> },
-      { url: <span class="code-string">'http://api2.example.com'</span> },
-      { url: <span class="code-string">'http://api3.example.com'</span> },
-    ],
-  },
-})</code></pre>
-            </div>
-          </div>
-
-          <!-- Latency Based -->
-          <div class="algorithm-card">
-            <h3>⚡ Latency</h3>
-            <p class="algorithm-description">
-              Prefer the target with lowest average response time. Optimizes for
-              user experience.
-            </p>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">latency.ts</span>
-              </div>
-              <pre><code>gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/api/*'</span>,
-  loadBalancer: {
-    strategy: <span class="code-string">'latency'</span>,
-    targets: [
-      { url: <span class="code-string">'http://api1.example.com'</span> },
-      { url: <span class="code-string">'http://api2.example.com'</span> },
-    ],
-  },
-})</code></pre>
-            </div>
-          </div>
-
-          <!-- Weighted Least Connections -->
-          <div class="algorithm-card">
-            <h3>📊 Weighted Least Connections</h3>
-            <p class="algorithm-description">
-              Combines weights with connection count. Best for mixed capacity
-              with variable load.
-            </p>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">weighted-least-connections.ts</span>
-              </div>
-              <pre><code>gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/api/*'</span>,
-  loadBalancer: {
-    strategy: <span class="code-string">'weighted-least-connections'</span>,
-    targets: [
-      { url: <span class="code-string">'http://api1.example.com'</span>, weight: <span class="code-number">3</span> },
-      { url: <span class="code-string">'http://api2.example.com'</span>, weight: <span class="code-number">2</span> },
-      { url: <span class="code-string">'http://api3.example.com'</span>, weight: <span class="code-number">1</span> },
-    ],
-  },
-})</code></pre>
-            </div>
+<span class="kw">await</span> gateway.<span class="fn">listen</span>()
+console.<span class="fn">log</span>(<span class="str">'🚀 Bungate cluster running on :3000'</span>)
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Security Showcase Section -->
-    <section class="section">
-      <div class="container">
-        <h2 class="section-title">🔐 Enterprise Security Built-In</h2>
-        <p class="section-subtitle">
-          Production-grade security features that protect against OWASP Top 10
-          threats
-        </p>
+    <!-- Security -->
+    <section style="background:rgba(255,255,255,0.01);">
+      <div class="section-inner">
+        <div class="section-label">Enterprise Security</div>
+        <h2 class="section-title">Battle-tested security defaults</h2>
+        <p class="section-desc">Every request passes through a defense-in-depth pipeline — from TLS termination to JWT validation to input sanitization.</p>
 
-        <!-- Security Feature Tabs -->
-        <div class="security-showcase">
-          <!-- TLS/HTTPS -->
-          <div class="security-demo">
-            <div class="security-demo-header">
-              <h3>🔒 TLS 1.3 with Auto HTTP Redirect</h3>
-              <p>Encrypted communications with automatic HTTPS upgrade</p>
-            </div>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">tls-gateway.ts</span>
-                <button class="copy-btn" onclick="copyCodeBlock(this)">
-                  📋 Copy
-                </button>
-              </div>
-              <pre><code><span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
-  server: { port: <span class="code-number">443</span> },
+        <div class="security-row">
+          <span class="badge g">✓ TLS 1.3</span>
+          <span class="badge g">✓ HTTP→HTTPS Redirect</span>
+          <span class="badge g">✓ JWT Key Rotation</span>
+          <span class="badge g">✓ JWKS Auto-Refresh</span>
+          <span class="badge b">✓ Input Validation</span>
+          <span class="badge b">✓ XSS Prevention</span>
+          <span class="badge b">✓ Path Traversal</span>
+          <span class="badge b">✓ DoS Protection</span>
+          <span class="badge g">✓ Security Headers</span>
+          <span class="badge g">✓ CSRF Protection</span>
+        </div>
+
+        <div class="install-box" style="margin-top:32px;">
+          <div class="prompt" style="display:block;padding:20px 24px;overflow-x:auto;white-space:pre;line-height:1.7;">
+<span class="cmt">// TLS 1.3 + JWT key rotation — zero-downtime</span>
+<span class="kw">const</span> gateway = <span class="kw">new</span> <span class="fn">BunGateway</span>({
   security: {
     tls: {
-      enabled: <span class="code-keyword">true</span>,
-      cert: <span class="code-string">'./cert.pem'</span>,
-      key: <span class="code-string">'./key.pem'</span>,
-      minVersion: <span class="code-string">'TLSv1.3'</span>,
-      cipherSuites: [
-        <span class="code-string">'TLS_AES_256_GCM_SHA384'</span>,
-        <span class="code-string">'TLS_CHACHA20_POLY1305_SHA256'</span>,
-      ],
-      redirectHTTP: <span class="code-keyword">true</span>,  <span class="code-comment">// Auto-redirect :80 → :443</span>
-      redirectPort: <span class="code-number">80</span>,
+      enabled: <span class="kw">true</span>,
+      cert: <span class="str">'./cert.pem'</span>,
+      key: <span class="str">'./key.pem'</span>,
+      minVersion: <span class="str">'TLSv1.3'</span>,
+      cipherSuites: [<span class="str">'TLS_AES_256_GCM_SHA384'</span>, <span class="str">'TLS_CHACHA20_POLY1305_SHA256'</span>],
+      redirectHTTP: <span class="kw">true</span>,
     },
-  },
-})
-
-<span class="code-comment">// All traffic now encrypted with TLS 1.3! 🔐</span></code></pre>
-            </div>
-            <div class="security-benefits">
-              <span class="benefit">✓ Man-in-the-Middle Protection</span>
-              <span class="benefit">✓ Automatic HTTP → HTTPS</span>
-              <span class="benefit">✓ Strong Cipher Suites</span>
-            </div>
-          </div>
-
-          <!-- JWT Authentication -->
-          <div class="security-demo">
-            <div class="security-demo-header">
-              <h3>🎫 JWT with Zero-Downtime Key Rotation</h3>
-              <p>
-                Secure authentication with automatic key rotation and JWKS
-                support
-              </p>
-            </div>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">jwt-auth.ts</span>
-                <button class="copy-btn" onclick="copyCodeBlock(this)">
-                  📋 Copy
-                </button>
-              </div>
-              <pre><code><span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
-  security: {
     jwtKeyRotation: {
       secrets: [
-        { 
-          key: process.env.<span class="code-function">JWT_SECRET_NEW</span>, 
-          algorithm: <span class="code-string">'HS256'</span>,
-          kid: <span class="code-string">'2024-11'</span>,
-          primary: <span class="code-keyword">true</span>  <span class="code-comment">// New tokens use this</span>
-        },
-        { 
-          key: process.env.<span class="code-function">JWT_SECRET_OLD</span>, 
-          algorithm: <span class="code-string">'HS256'</span>,
-          kid: <span class="code-string">'2024-10'</span>,
-          deprecated: <span class="code-keyword">true</span>  <span class="code-comment">// Still validates old tokens</span>
-        },
+        { key: process.env.<span class="fn">JWT_NEW</span>, kid: <span class="str">'2025-05'</span>, primary: <span class="kw">true</span> },
+        { key: process.env.<span class="fn">JWT_OLD</span>, kid: <span class="str">'2025-04'</span>, deprecated: <span class="kw">true</span> },
       ],
-      jwksUri: <span class="code-string">'https://auth.example.com/.well-known/jwks.json'</span>,
-      jwksRefreshInterval: <span class="code-number">3600000</span>,  <span class="code-comment">// 1 hour</span>
+      jwksUri: <span class="str">'https://auth.example.com/.well-known/jwks.json'</span>,
+      jwksRefreshInterval: <span class="num">3600000</span>,
     },
-  },
-})
-
-gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/api/*'</span>,
-  target: <span class="code-string">'http://backend:3000'</span>,
-  auth: {
-    secret: process.env.<span class="code-function">JWT_SECRET_NEW</span>,
-    jwtOptions: {
-      algorithms: [<span class="code-string">'HS256'</span>, <span class="code-string">'RS256'</span>],
-      issuer: <span class="code-string">'https://auth.example.com'</span>,
-    },
-  },
-})</code></pre>
-            </div>
-            <div class="security-benefits">
-              <span class="benefit">✓ Zero-Downtime Rotation</span>
-              <span class="benefit">✓ JWKS Auto-Refresh</span>
-              <span class="benefit">✓ Multi-Algorithm Support</span>
-            </div>
-          </div>
-
-          <!-- Input Validation -->
-          <div class="security-demo">
-            <div class="security-demo-header">
-              <h3>🛡️ Input Validation & Sanitization</h3>
-              <p>Protection against injection attacks and malformed data</p>
-            </div>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">input-validation.ts</span>
-                <button class="copy-btn" onclick="copyCodeBlock(this)">
-                  📋 Copy
-                </button>
-              </div>
-              <pre><code><span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
-  security: {
     inputValidation: {
-      maxPathLength: <span class="code-number">2048</span>,
-      maxHeaderSize: <span class="code-number">16384</span>,
-      maxHeaderCount: <span class="code-number">100</span>,
-      allowedPathChars: <span class="code-regex">/^[a-zA-Z0-9\/_\-\.~%]+$/</span>,
-      blockedPatterns: [
-        <span class="code-regex">/\.\./</span>,           <span class="code-comment">// Directory traversal</span>
-        <span class="code-regex">/%00/</span>,           <span class="code-comment">// Null byte injection</span>
-        <span class="code-regex">/&lt;script&gt;/i</span>,     <span class="code-comment">// XSS attempts</span>
-        <span class="code-regex">/javascript:/i</span>,  <span class="code-comment">// JavaScript protocol</span>
-      ],
-      sanitizeHeaders: <span class="code-keyword">true</span>,
-    },
-    sizeLimits: {
-      maxBodySize: <span class="code-number">10</span> * <span class="code-number">1024</span> * <span class="code-number">1024</span>,  <span class="code-comment">// 10 MB</span>
-      maxUrlLength: <span class="code-number">2048</span>,
+      maxPathLength: <span class="num">2048</span>,
+      maxHeaderSize: <span class="num">16384</span>,
+      blockedPatterns: [<span class="str">/\\.\\./</span>, <span class="str">/%00/</span>, <span class="str">/&lt;script&gt;/i</span>],
     },
   },
 })
-
-<span class="code-comment">// Requests with '../../../etc/passwd' → Blocked! 🚫</span>
-<span class="code-comment">// Requests with '&lt;script&gt;alert(1)&lt;/script&gt;' → Blocked! 🚫</span></code></pre>
-            </div>
-            <div class="security-benefits">
-              <span class="benefit">✓ Path Traversal Protection</span>
-              <span class="benefit">✓ XSS Prevention</span>
-              <span class="benefit">✓ DoS Protection</span>
-            </div>
-          </div>
-
-          <!-- Security Headers -->
-          <div class="security-demo">
-            <div class="security-demo-header">
-              <h3>📋 Comprehensive Security Headers</h3>
-              <p>HSTS, CSP, X-Frame-Options, and more automatically applied</p>
-            </div>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">security-headers.ts</span>
-                <button class="copy-btn" onclick="copyCodeBlock(this)">
-                  📋 Copy
-                </button>
-              </div>
-              <pre><code><span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
-  security: {
-    securityHeaders: {
-      enabled: <span class="code-keyword">true</span>,
-      hsts: {
-        maxAge: <span class="code-number">31536000</span>,        <span class="code-comment">// 1 year</span>
-        includeSubDomains: <span class="code-keyword">true</span>,
-        preload: <span class="code-keyword">true</span>,
-      },
-      contentSecurityPolicy: {
-        directives: {
-          <span class="code-string">'default-src'</span>: [<span class="code-string">"'self'"</span>],
-          <span class="code-string">'script-src'</span>: [<span class="code-string">"'self'"</span>],
-          <span class="code-string">'style-src'</span>: [<span class="code-string">"'self'"</span>],
-          <span class="code-string">'frame-ancestors'</span>: [<span class="code-string">"'none'"</span>],
-        },
-      },
-      xFrameOptions: <span class="code-string">'DENY'</span>,
-      xContentTypeOptions: <span class="code-keyword">true</span>,
-      referrerPolicy: <span class="code-string">'strict-origin-when-cross-origin'</span>,
-    },
-  },
-})
-
-<span class="code-comment">// Every response gets security headers automatically! 🛡️</span></code></pre>
-            </div>
-            <div class="security-benefits">
-              <span class="benefit">✓ Clickjacking Protection</span>
-              <span class="benefit">✓ XSS Mitigation</span>
-              <span class="benefit">✓ MIME Sniffing Prevention</span>
-            </div>
-          </div>
-
-          <!-- Trusted Proxies -->
-          <div class="security-demo">
-            <div class="security-demo-header">
-              <h3>🌐 Trusted Proxy Validation</h3>
-              <p>Secure client IP extraction with CDN support</p>
-            </div>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">trusted-proxies.ts</span>
-                <button class="copy-btn" onclick="copyCodeBlock(this)">
-                  📋 Copy
-                </button>
-              </div>
-              <pre><code><span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
-  security: {
-    trustedProxies: {
-      enabled: <span class="code-keyword">true</span>,
-      trustedIPs: [
-        <span class="code-string">'10.0.0.0/8'</span>,      <span class="code-comment">// Private network</span>
-        <span class="code-string">'172.16.0.0/12'</span>,   <span class="code-comment">// Private network</span>
-      ],
-      trustedNetworks: [
-        <span class="code-string">'cloudflare'</span>,     <span class="code-comment">// Cloudflare IPs</span>
-        <span class="code-string">'aws'</span>,            <span class="code-comment">// AWS CloudFront</span>
-        <span class="code-string">'gcp'</span>,            <span class="code-comment">// Google Cloud CDN</span>
-        <span class="code-string">'azure'</span>,          <span class="code-comment">// Azure CDN</span>
-      ],
-      maxForwardedDepth: <span class="code-number">3</span>,
-    },
-  },
-})
-
-<span class="code-comment">// Prevents IP spoofing attacks! 🎯</span>
-<span class="code-comment">// Only trusts X-Forwarded-For from verified proxies</span></code></pre>
-            </div>
-            <div class="security-benefits">
-              <span class="benefit">✓ IP Spoofing Prevention</span>
-              <span class="benefit">✓ CDN Support Built-In</span>
-              <span class="benefit">✓ CIDR Notation</span>
-            </div>
-          </div>
-
-          <!-- Complete Security Example -->
-          <div class="security-demo">
-            <div class="security-demo-header">
-              <h3>🏰 Complete Security-Hardened Gateway</h3>
-              <p>All security features combined for maximum protection</p>
-            </div>
-            <div class="code-container">
-              <div class="code-header">
-                <span class="code-title">production-gateway.ts</span>
-                <button class="copy-btn" onclick="copyCodeBlock(this)">
-                  📋 Copy
-                </button>
-              </div>
-              <pre><code id="security-code-block"><span class="code-keyword">import</span> { BunGateway } <span class="code-keyword">from</span> <span class="code-string">'bungate'</span>
-
-<span class="code-keyword">const</span> gateway = <span class="code-keyword">new</span> <span class="code-function">BunGateway</span>({
-  server: { port: <span class="code-number">443</span> },
-  security: {
-    <span class="code-comment">// TLS/HTTPS</span>
-    tls: {
-      enabled: <span class="code-keyword">true</span>,
-      cert: process.env.<span class="code-function">TLS_CERT</span>,
-      key: process.env.<span class="code-function">TLS_KEY</span>,
-      minVersion: <span class="code-string">'TLSv1.3'</span>,
-      redirectHTTP: <span class="code-keyword">true</span>,
-      redirectPort: <span class="code-number">80</span>,
-    },
-    <span class="code-comment">// Input validation</span>
-    inputValidation: {
-      maxPathLength: <span class="code-number">2048</span>,
-      sanitizeHeaders: <span class="code-keyword">true</span>,
-      blockedPatterns: [<span class="code-regex">/\.\./</span>, <span class="code-regex">/%00/</span>, <span class="code-regex">/&lt;script&gt;/i</span>],
-    },
-    <span class="code-comment">// Security headers</span>
-    securityHeaders: {
-      enabled: <span class="code-keyword">true</span>,
-      hsts: { maxAge: <span class="code-number">31536000</span>, preload: <span class="code-keyword">true</span> },
-      contentSecurityPolicy: {
-        directives: {
-          <span class="code-string">'default-src'</span>: [<span class="code-string">"'self'"</span>],
-          <span class="code-string">'frame-ancestors'</span>: [<span class="code-string">"'none'"</span>],
-        },
-      },
-      xFrameOptions: <span class="code-string">'DENY'</span>,
-    },
-    <span class="code-comment">// Size limits</span>
-    sizeLimits: {
-      maxBodySize: <span class="code-number">10</span> * <span class="code-number">1024</span> * <span class="code-number">1024</span>,
-      maxUrlLength: <span class="code-number">2048</span>,
-    },
-    <span class="code-comment">// Trusted proxies</span>
-    trustedProxies: {
-      enabled: <span class="code-keyword">true</span>,
-      trustedNetworks: [<span class="code-string">'cloudflare'</span>, <span class="code-string">'aws'</span>],
-    },
-    <span class="code-comment">// JWT key rotation</span>
-    jwtKeyRotation: {
-      secrets: [
-        { key: process.env.<span class="code-function">JWT_NEW</span>, primary: <span class="code-keyword">true</span> },
-        { key: process.env.<span class="code-function">JWT_OLD</span>, deprecated: <span class="code-keyword">true</span> },
-      ],
-    },
-  },
-})
-
-gateway.<span class="code-function">addRoute</span>({
-  pattern: <span class="code-string">'/api/*'</span>,
-  target: <span class="code-string">'http://backend:3000'</span>,
-  auth: {
-    secret: process.env.<span class="code-function">JWT_NEW</span>,
-    jwtOptions: { algorithms: [<span class="code-string">'HS256'</span>] },
-  },
-  rateLimit: {
-    max: <span class="code-number">1000</span>,
-    windowMs: <span class="code-number">60000</span>,
-  },
-})
-
-<span class="code-keyword">await</span> gateway.<span class="code-function">listen</span>()
-console.<span class="code-function">log</span>(<span class="code-string">'🔒 Production gateway secured!'</span>)</code></pre>
-            </div>
-            <div class="security-benefits">
-              <span class="benefit">✓ OWASP Top 10 Protection</span>
-              <span class="benefit">✓ PCI DSS Compliant</span>
-              <span class="benefit">✓ Zero-Config Security</span>
-            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Security Features Section -->
-    <section class="section">
-      <div class="container">
-        <h2 class="section-title">🔐 Production-Grade Security</h2>
-        <p class="section-subtitle">
-          Comprehensive security hardening to protect against modern threats
-        </p>
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">🔒</div>
-            <h3>TLS/HTTPS Support</h3>
-            <p>
-              Full TLS 1.2+ support with configurable cipher suites, automatic
-              HTTP to HTTPS redirection, and certificate validation. Protect
-              against man-in-the-middle attacks with encrypted communications.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🛡️</div>
-            <h3>Input Validation</h3>
-            <p>
-              Comprehensive input validation and sanitization for paths,
-              headers, and query parameters. Protection against injection
-              attacks, directory traversal, and malformed data with
-              RFC-compliant validation.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🔐</div>
-            <h3>Security Headers</h3>
-            <p>
-              Automatic security headers including HSTS, CSP, X-Frame-Options,
-              X-Content-Type-Options, and Referrer-Policy. Configurable Content
-              Security Policy with report-only mode for testing.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🎫</div>
-            <h3>JWT Key Rotation</h3>
-            <p>
-              Support for multiple JWT secrets with automatic key rotation. JWKS
-              endpoint integration with automatic refresh, zero-downtime key
-              updates, and deprecation warnings for monitoring.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🔍</div>
-            <h3>Trusted Proxy Validation</h3>
-            <p>
-              Secure client IP extraction with trusted proxy configuration. CIDR
-              notation support, predefined trusted networks (Cloudflare, AWS,
-              GCP, Azure), and forwarded header chain validation.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🚫</div>
-            <h3>CSRF Protection</h3>
-            <p>
-              Built-in Cross-Site Request Forgery protection with automatic
-              token generation and validation. Configurable for state-changing
-              operations with path-based exclusions.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">📏</div>
-            <h3>Request Size Limits</h3>
-            <p>
-              Configurable limits for request body, headers, URL length, and
-              query parameters. Protection against resource exhaustion and DoS
-              attacks with early rejection and appropriate HTTP status codes.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🔐</div>
-            <h3>Secure Session Management</h3>
-            <p>
-              Cryptographically secure session ID generation with minimum 128
-              bits of entropy. Automatic expiration, secure cookie attributes
-              (Secure, HttpOnly, SameSite), and session validation.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">⚠️</div>
-            <h3>Secure Error Handling</h3>
-            <p>
-              Production-safe error responses that prevent information
-              disclosure. Sanitized error messages, no stack traces in
-              production, and comprehensive internal logging for debugging.
-            </p>
-          </div>
-        </div>
-      </div>
+    <!-- CTA -->
+    <section style="text-align:center;padding:100px 24px 120px;background:radial-gradient(ellipse at 50% 50%, rgba(56,189,248,0.05) 0%, transparent 70%);">
+      <h2 style="font-size:clamp(28px,3.5vw,40px);font-weight:700;color:#fff;letter-spacing:-1px;margin-bottom:12px;">Ready to ship faster?</h2>
+      <p style="font-size:16px;color:var(--text-secondary);margin-bottom:32px;">Enterprise security, zero config. Install and deploy in minutes.</p>
+      <a href="https://github.com/BackendStack21/bungate" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:8px;padding:14px 36px;border-radius:var(--radius-md);font-size:16px;font-weight:500;text-decoration:none;background:var(--accent);color:#000;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        View on GitHub
+      </a>
     </section>
 
-    <!-- Middleware Section -->
-    <section class="section">
-      <div class="container">
-        <h2 class="section-title">Comprehensive Feature Suite</h2>
-        <p class="section-subtitle">
-          Enterprise-grade features for modern API gateways
-        </p>
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">⚡</div>
-            <h3>Cluster Mode</h3>
-            <p>
-              Multi-process clustering for maximum CPU utilization.
-              Zero-downtime rolling restarts with SIGUSR2, dynamic scaling
-              (scaleUp/Down/To), and exponential backoff with jitter for worker
-              restarts.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🔄</div>
-            <h3>Load Balancing</h3>
-            <p>
-              8 different strategies including round-robin, least-connections,
-              weighted, ip-hash, latency-based, and power-of-two-choices for
-              optimal traffic distribution.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🌐</div>
-            <h3>Circuit Breaker</h3>
-            <p>
-              Automatic failure detection and recovery with configurable
-              thresholds. Prevent cascading failures and improve system
-              resilience.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🔐</div>
-            <h3>JWT Authentication</h3>
-            <p>
-              Secure JSON Web Token authentication with JWKS support, role-based
-              authorization, and custom claims validation built right in.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">�</div>
-            <h3>Middleware System</h3>
-            <p>
-              Powerful async/await middleware pipeline for custom
-              request/response processing. CORS support, path rewriting, URL
-              transformation, and comprehensive lifecycle hooks.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">📊</div>
-            <h3>Observability</h3>
-            <p>
-              Prometheus metrics, structured JSON logging with request tracing,
-              health check APIs, real-time statistics, and custom metric
-              collection for complete visibility.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">⏱️</div>
-            <h3>Rate Limiting</h3>
-            <p>
-              Flexible rate limiting with custom key generation. Protect your
-              APIs from abuse with per-IP, per-user, or custom limits and
-              configurable time windows.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="section stats-section">
-      <div class="container">
-        <h2 class="section-title">Built for Modern Web</h2>
-        <p class="section-subtitle">
-          Leveraging Bun's speed with developer-friendly APIs
-        </p>
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-value">⚡ 19.5K</div>
-            <div class="stat-label">Requests per Second</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value">🔒 TLS 1.2+</div>
-            <div class="stat-label">Encrypted Communications</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value">🧠 8+</div>
-            <div class="stat-label">Load Balancing Strategies</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value">🛡️ Built-in</div>
-            <div class="stat-label">Security Hardening</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="section">
-      <div class="container" style="text-align: center">
-        <h2 class="section-title">Ready to Get Started?</h2>
-        <p class="section-subtitle">
-          Build high-performance HTTP gateways with Bun today
-        </p>
-        <div class="cta-buttons">
-          <a
-            href="https://github.com/BackendStack21/bungate/blob/main/docs/DOCUMENTATION.md"
-            class="btn btn-primary"
-            >Read the Documentation</a
-          >
-          <a
-            href="https://github.com/BackendStack21/bungate"
-            class="btn btn-secondary"
-            >View on GitHub</a
-          >
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-      <div class="container">
-        <div class="footer-content">
-          <div class="footer-links">
-            <a href="https://github.com/BackendStack21/bungate">GitHub</a>
-            <a
-              href="https://github.com/BackendStack21/bungate/blob/main/docs/DOCUMENTATION.md"
-              >Documentation</a
-            >
-            <a
-              href="https://github.com/BackendStack21/bungate/blob/main/docs/SECURITY.md"
-              >Security</a
-            >
-            <a
-              href="https://github.com/BackendStack21/bungate/blob/main/docs/TLS_CONFIGURATION.md"
-              >TLS Guide</a
-            >
-            <a href="https://www.npmjs.com/package/bungate">npm</a>
-            <a href="https://github.com/BackendStack21/bungate/issues"
-              >Issues</a
-            >
-            <a
-              href="https://github.com/BackendStack21/bungate/blob/main/benchmark/README.md"
-              >Benchmarks</a
-            >
-          </div>
-          <p class="footer-text">
-            © 2025 <a href="https://21no.de/">21no.de</a> • Open source under
-            the MIT License.
-          </p>
-        </div>
-      </div>
+    <footer style="border-top:1px solid var(--border-subtle);padding:40px 24px;text-align:center;color:var(--text-tertiary);font-size:13px;">
+      <p>
+        Built with ❤️ by <a href="https://21no.de" style="color:var(--text-secondary);text-decoration:none;">21no.de</a> — AI-native infrastructure and systems engineering research lab.
+        <br>
+        <a href="https://github.com/BackendStack21/bungate" style="color:var(--text-secondary);text-decoration:none;">GitHub</a> ·
+        <a href="https://www.npmjs.com/package/bungate" style="color:var(--text-secondary);text-decoration:none;">npm</a> ·
+        <a href="https://github.com/BackendStack21/bungate/blob/main/docs/DOCUMENTATION.md" style="color:var(--text-secondary);text-decoration:none;">Documentation</a>
+      </p>
     </footer>
 
     <script>
-      function copyCode() {
-        const codeBlock = document.getElementById('code-block')
-        const textToCopy = codeBlock.innerText
-
-        navigator.clipboard
-          .writeText(textToCopy)
-          .then(() => {
-            const copyBtn = document.querySelector('.copy-btn')
-            const originalText = copyBtn.innerHTML
-            copyBtn.innerHTML = '✓ Copied!'
-            copyBtn.style.background = 'var(--accent-primary)'
-            copyBtn.style.color = 'white'
-
-            setTimeout(() => {
-              copyBtn.innerHTML = originalText
-              copyBtn.style.background = 'var(--bg-secondary)'
-              copyBtn.style.color = 'var(--text-secondary)'
-            }, 2000)
-          })
-          .catch((err) => {
-            console.error('Failed to copy:', err)
-          })
-      }
-
-      function copyCodeBlock(button) {
-        const codeContainer = button.closest('.code-container')
-        const codeBlock = codeContainer.querySelector('code')
-        const textToCopy = codeBlock.innerText
-
-        navigator.clipboard
-          .writeText(textToCopy)
-          .then(() => {
-            const originalText = button.innerHTML
-            button.innerHTML = '✓ Copied!'
-            button.style.background = 'var(--accent-primary)'
-            button.style.color = 'white'
-
-            setTimeout(() => {
-              button.innerHTML = originalText
-              button.style.background = 'var(--bg-secondary)'
-              button.style.color = 'var(--text-secondary)'
-            }, 2000)
-          })
-          .catch((err) => {
-            console.error('Failed to copy:', err)
-          })
-      }
-
-      // Smooth scroll for anchor links
-      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-        anchor.addEventListener('click', function (e) {
-          e.preventDefault()
-          const target = document.querySelector(this.getAttribute('href'))
-          if (target) {
-            target.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start',
-            })
-          }
-        })
-      })
+      // Copy code block
+      document.querySelectorAll('.install-box .prompt:last-of-type code, .install-box .prompt:nth-child(2)').forEach(function(el) {
+        el.style.cursor = 'pointer';
+        el.title = 'Click to copy';
+        el.addEventListener('click', function() {
+          var text = el.textContent || el.innerText;
+          navigator.clipboard.writeText(text).then(function() {
+            var orig = el.style.background;
+            el.style.background = 'rgba(56,189,248,0.15)';
+            setTimeout(function() { el.style.background = orig; }, 600);
+          });
+        });
+      });
     </script>
+
   </body>
 </html>
