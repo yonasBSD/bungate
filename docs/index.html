@@ -103,6 +103,46 @@
       .cmt { color: #546e7a; font-style: italic; }
       .num { color: #f78c6c; }
 
+      /* === Use Case Carousel === */
+      .use-carousel { max-width: 880px; margin: 40px auto 0; position: relative; }
+      .use-slides { overflow: hidden; border-radius: var(--radius-lg); }
+      .use-slide {
+        display: none; grid-template-columns: auto 1fr;
+        gap: 28px; align-items: start;
+        background: var(--bg-card); border: 1px solid var(--border-card);
+        border-radius: var(--radius-lg); padding: 28px 32px;
+        animation: useFadeIn 0.4s ease;
+      }
+      .use-slide.active { display: grid; }
+      @keyframes useFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      .use-icon {
+        display: flex; flex-direction: column; align-items: center; gap: 8px;
+        padding: 16px 20px; border-radius: var(--radius-md);
+        font-family: var(--font-mono); font-size: 12px; text-align: center;
+        min-width: 110px; background: var(--accent-subtle); border: 1px solid rgba(56,189,248,0.2);
+      }
+      .use-icon .u-emoji { font-size: 28px; }
+      .use-icon .u-label { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
+      .use-body { min-width: 0; }
+      .use-body h4 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+      .use-body p { font-size: 13px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 12px; }
+      .use-body .use-code {
+        font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary);
+        background: #111113; border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm); padding: 10px 14px;
+        white-space: pre; overflow-x: auto;
+      }
+      .use-body .use-code .kw { color: #c792ea; }
+      .use-body .use-code .fn { color: #82aaff; }
+      .use-body .use-code .str { color: #c3e88d; }
+      .use-body .use-code .cmt { color: #546e7a; font-style: italic; }
+      .use-body .use-code .num { color: #f78c6c; }
+      .use-controls { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 14px; }
+      .use-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-card); border: none; cursor: pointer; transition: all 0.2s; padding: 0; }
+      .use-dot.active { background: var(--accent); box-shadow: 0 0 8px rgba(56,189,248,0.3); }
+      .use-dot:hover { background: var(--text-tertiary); }
+      .use-label { font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); margin-left: 8px; letter-spacing: 0.5px; }
+
       /* === Security rows === */
       .security-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
       .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 500; }
@@ -114,6 +154,8 @@
         .stats { gap: 20px; }
         .stat .num { font-size: 24px; }
         .section-inner { padding: 48px 16px; }
+        .use-slide { grid-template-columns: 1fr; gap: 16px; padding: 20px; }
+        .use-icon { flex-direction: row; min-width: auto; justify-content: center; gap: 12px; }
       }
     </style>
 
@@ -195,6 +237,114 @@
         <div class="stat"><div class="num">&lt;1ms</div><div class="label">Routing Overhead</div></div>
         <div class="stat"><div class="num">8+</div><div class="label">LB Strategies</div></div>
         <div class="stat"><div class="num">TLS 1.3</div><div class="label">Enterprise Security</div></div>
+      </div>
+
+      <!-- Use Case Carousel -->
+      <div class="use-carousel">
+        <div class="use-slides">
+          <div class="use-slide active">
+            <div class="use-icon"><div class="u-emoji">🚀</div><div class="u-label">Microservices</div></div>
+            <div class="use-body">
+              <h4>API Gateway for Microservices</h4>
+              <p>Route traffic to dozens of backend services with intelligent load balancing, JWT auth, and per-route rate limiting — all from a single config file.</p>
+              <div class="use-code"><span class="kw">const</span> gateway = <span class="kw">new</span> <span class="fn">BunGateway</span>({
+  server: { port: <span class="num">8080</span> },
+  cluster: { enabled: <span class="kw">true</span>, workers: <span class="num">4</span> },
+  auth: { secret: process.env.<span class="fn">JWT_SECRET</span> },
+  cors: { origin: [<span class="str">'https://myapp.com'</span>] },
+})
+gateway.<span class="fn">addRoute</span>({ pattern: <span class="str">'/users/*'</span>, target: <span class="str">'http://user-svc:3001'</span>, rateLimit: { max: <span class="num">100</span>, windowMs: <span class="num">60000</span> } })
+gateway.<span class="fn">addRoute</span>({ pattern: <span class="str">'/payments/*'</span>, target: <span class="str">'http://pay-svc:3002'</span>, circuitBreaker: { enabled: <span class="kw">true</span>, failureThreshold: <span class="num">3</span> } })</div>
+            </div>
+          </div>
+          <div class="use-slide">
+            <div class="use-icon"><div class="u-emoji">🎯</div><div class="u-label">Load Balancer</div></div>
+            <div class="use-body">
+              <h4>Intelligent Load Balancer with Health Checks</h4>
+              <p>Distribute traffic across backend pools with 8+ strategies. Automatic health checks detect unhealthy targets and reroute traffic without dropping requests.</p>
+              <div class="use-code">gateway.<span class="fn">addRoute</span>({
+  pattern: <span class="str">'/api/*'</span>,
+  loadBalancer: {
+    strategy: <span class="str">'least-connections'</span>,
+    targets: [
+      { url: <span class="str">'http://api1:3000'</span>, weight: <span class="num">3</span> },
+      { url: <span class="str">'http://api2:3000'</span>, weight: <span class="num">2</span> },
+      { url: <span class="str">'http://api3:3000'</span>, weight: <span class="num">1</span> },
+    ],
+    healthCheck: { enabled: <span class="kw">true</span>, interval: <span class="num">15000</span>, path: <span class="str">'/health'</span> },
+    stickySessions: { enabled: <span class="kw">true</span> },
+  },
+})</div>
+            </div>
+          </div>
+          <div class="use-slide">
+            <div class="use-icon"><div class="u-emoji">🔒</div><div class="u-label">TLS Proxy</div></div>
+            <div class="use-body">
+              <h4>TLS Termination with Auto HTTP→HTTPS Redirect</h4>
+              <p>Terminate TLS 1.3 at the edge with automatic certificate loading, strong cipher suites, and seamless HTTP-to-HTTPS redirection. Zero config beyond pointing at your cert files.</p>
+              <div class="use-code"><span class="kw">const</span> gateway = <span class="kw">new</span> <span class="fn">BunGateway</span>({
+  server: { port: <span class="num">443</span> },
+  security: {
+    tls: {
+      enabled: <span class="kw">true</span>,
+      cert: <span class="str">'./cert.pem'</span>,
+      key: <span class="str">'./key.pem'</span>,
+      minVersion: <span class="str">'TLSv1.3'</span>,
+      redirectHTTP: <span class="kw">true</span>,
+      redirectPort: <span class="num">80</span>,
+    },
+  },
+})</div>
+            </div>
+          </div>
+          <div class="use-slide">
+            <div class="use-icon"><div class="u-emoji">⚡</div><div class="u-label">Cluster Mode</div></div>
+            <div class="use-body">
+              <h4>Multi-Process Cluster with Zero-Downtime Restarts</h4>
+              <p>Scale horizontally across all CPU cores. Rolling restarts spawn replacements before stopping old workers — zero dropped connections during deployments.</p>
+              <div class="use-code"><span class="kw">const</span> gateway = <span class="kw">new</span> <span class="fn">BunGateway</span>({
+  server: { port: <span class="num">3000</span> },
+  cluster: {
+    enabled: <span class="kw">true</span>,
+    workers: <span class="num">8</span>,
+    restartWorkers: <span class="kw">true</span>,
+    shutdownTimeout: <span class="num">30000</span>,
+    maxRestarts: <span class="num">10</span>,
+  },
+})
+<span class="cmt">// Scale at runtime: kill -s SIGUSR2 &lt;pid&gt; → rolling restart</span>
+<span class="cmt">// Increase workers: gateway.cluster.scale(12)</span></div>
+            </div>
+          </div>
+          <div class="use-slide">
+            <div class="use-icon"><div class="u-emoji">🛡️</div><div class="u-label">Edge Proxy</div></div>
+            <div class="use-body">
+              <h4>Secure Edge Proxy with Defense-in-Depth</h4>
+              <p>Every request passes through TLS termination, input validation, JWT verification, and security headers — before reaching your backend. OWASP Top 10 covered by default.</p>
+              <div class="use-code"><span class="kw">const</span> gateway = <span class="kw">new</span> <span class="fn">BunGateway</span>({
+  security: {
+    tls: { enabled: <span class="kw">true</span>, cert: <span class="str">'./cert.pem'</span>, key: <span class="str">'./key.pem'</span> },
+    jwtKeyRotation: {
+      secrets: [{ key: process.env.<span class="fn">JWT_NEW</span>, kid: <span class="str">'2025-05'</span>, primary: <span class="kw">true</span> }],
+      jwksUri: <span class="str">'https://auth.example.com/.well-known/jwks.json'</span>,
+    },
+    inputValidation: {
+      blockedPatterns: [<span class="str">/\.\./</span>, <span class="str">/%00/</span>, <span class="str">/&lt;script&gt;/i</span>],
+    },
+    securityHeaders: { enabled: <span class="kw">true</span> },
+  },
+})</div>
+            </div>
+          </div>
+        </div>
+        <div class="use-controls">
+          <button class="use-dot active" data-index="0" aria-label="Microservices Gateway"></button>
+          <button class="use-dot" data-index="1" aria-label="Load Balancer"></button>
+          <button class="use-dot" data-index="2" aria-label="TLS Proxy"></button>
+          <button class="use-dot" data-index="3" aria-label="Cluster Mode"></button>
+          <button class="use-dot" data-index="4" aria-label="Edge Proxy"></button>
+          <span class="use-label">use cases</span>
+        </div>
       </div>
     </section>
 
@@ -380,6 +530,39 @@ console.<span class="fn">log</span>(<span class="str">'🚀 Bungate cluster runn
           });
         });
       });
+
+      // Use Case Carousel
+      (function(){
+        var slides = document.querySelectorAll('.use-slide');
+        var dots = document.querySelectorAll('.use-dot');
+        var current = 0;
+        var interval = 6000;
+        var timer;
+
+        function show(idx) {
+          slides[current].classList.remove('active');
+          dots[current].classList.remove('active');
+          current = (idx + slides.length) % slides.length;
+          slides[current].classList.add('active');
+          dots[current].classList.add('active');
+        }
+
+        function next() { show(current + 1); }
+
+        dots.forEach(function(dot) {
+          dot.addEventListener('click', function() {
+            show(parseInt(this.dataset.index));
+            clearInterval(timer);
+            timer = setInterval(next, interval);
+          });
+        });
+
+        timer = setInterval(next, interval);
+
+        var carousel = document.querySelector('.use-carousel');
+        carousel.addEventListener('mouseenter', function(){ clearInterval(timer); });
+        carousel.addEventListener('mouseleave', function(){ timer = setInterval(next, interval); });
+      })();
     </script>
 
   </body>
