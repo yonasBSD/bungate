@@ -9,6 +9,7 @@ import {
   sanitizeHeader,
   containsOnlyAllowedChars,
   matchesBlockedPattern,
+  recursiveDecodeURIComponent,
 } from './utils'
 import { DEFAULT_SECURITY_CONFIG } from './config'
 
@@ -42,23 +43,36 @@ export class InputValidator {
       return { valid: false, errors }
     }
 
-    // Check path length
-    if (path.length > this.rules.maxPathLength) {
-      errors.push(`Path exceeds maximum length of ${this.rules.maxPathLength}`)
+    // First pass: check blocked patterns on raw path
+    // Catches null bytes, basic ../ patterns, etc.
+    if (matchesBlockedPattern(path, this.rules.blockedPatterns)) {
+      errors.push('Path contains blocked patterns')
+      // Don't return early — still apply sanitization for defense-in-depth
     }
 
-    // Check for blocked patterns (directory traversal, null bytes, etc.)
-    if (matchesBlockedPattern(path, this.rules.blockedPatterns)) {
+    // Recursively decode URL encoding to defeat double-encoding attacks
+    // Strip null bytes first (they break decoding and were already checked above)
+    const decoded = recursiveDecodeURIComponent(path.replace(/\0/g, ''))
+
+    // Second pass: check blocked patterns on the fully-decoded path
+    // Catches attacks hidden behind multiple layers of URL encoding
+    // (e.g., %252f → %2f → /, which passes the raw check but fails decoded)
+    if (decoded !== path && matchesBlockedPattern(decoded, this.rules.blockedPatterns)) {
       errors.push('Path contains blocked patterns')
     }
 
-    // Check if path contains only allowed characters
-    if (!containsOnlyAllowedChars(path, this.rules.allowedPathChars)) {
+    // Check path length on the fully-decoded path
+    if (decoded.length > this.rules.maxPathLength) {
+      errors.push(`Path exceeds maximum length of ${this.rules.maxPathLength}`)
+    }
+
+    // Check if decoded path contains only allowed characters
+    if (!containsOnlyAllowedChars(decoded, this.rules.allowedPathChars)) {
       errors.push('Path contains invalid characters')
     }
 
-    // Sanitize the path
-    const sanitized = sanitizePath(path)
+    // Sanitize the fully-decoded path (strip traversals, normalize slashes)
+    const sanitized = sanitizePath(decoded)
 
     return {
       valid: errors.length === 0,
@@ -66,6 +80,8 @@ export class InputValidator {
       sanitized,
     }
   }
+
+
 
   /**
    * Validates HTTP headers against RFC specifications

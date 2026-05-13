@@ -373,7 +373,18 @@ export class BunGateway implements Gateway {
 
       // Add rate limiting middleware if configured (before custom middleware)
       if (route.rateLimit) {
-        middlewares.push(createRateLimit(route.rateLimit))
+        // Use gateway's secure getClientIP() as the rate limit key generator
+        // to prevent X-Forwarded-For header rotation bypass attacks.
+        // Without this, an attacker can rotate X-Forwarded-For to avoid rate limits.
+        const rateLimitKeyGenerator = (req: ZeroRequest) => {
+          return this.getClientIP(req)
+        }
+        middlewares.push(
+          createRateLimit({
+            ...route.rateLimit,
+            keyGenerator: route.rateLimit.keyGenerator || rateLimitKeyGenerator,
+          }),
+        )
       }
 
       // Add route-specific middlewares after security middleware

@@ -208,7 +208,15 @@ export const DEFAULT_SECURITY_CONFIG: Partial<SecurityConfig> = {
     maxHeaderSize: 16384,
     maxHeaderCount: 100,
     allowedPathChars: /^[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]+$/,
-    blockedPatterns: [/\.\./, /%00/, /%2e%2e/i, /\0/],
+    blockedPatterns: [
+      /\.\./,
+      /%2e%2e/i,
+      /%2f/i,
+      /%5c/i,
+      /%00/,
+      /\0/,
+      /%25%32%[fF]/i,
+    ],
     sanitizeHeaders: true,
   },
   errorHandling: {

@@ -122,6 +122,24 @@ export interface LoadBalancerConfig {
      * @default 'GET'
      */
     method?: 'GET' | 'HEAD'
+    /**
+     * Number of consecutive failures before marking target unhealthy
+     * Prevents transient errors from flapping target state
+     * @default 3
+     */
+    failureThreshold?: number
+    /**
+     * Number of consecutive successes before marking target healthy again
+     * Prevents premature recovery from flapping
+     * @default 2
+     */
+    successThreshold?: number
+    /**
+     * Minimum number of healthy targets to maintain
+     * Prevents cascade failures where all targets go down at once
+     * @default 1
+     */
+    minHealthyTargets?: number
   }
 
   /**

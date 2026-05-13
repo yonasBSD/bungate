@@ -55,6 +55,10 @@ interface InternalTarget extends LoadBalancerTarget {
   totalResponseTime: number
   /** Timestamp of last request to this target */
   lastUsed: number
+  /** Consecutive health check failures (reset on success) */
+  consecutiveFailures: number
+  /** Consecutive health check successes (reset on failure) */
+  consecutiveSuccesses: number
 }
 
 /**
@@ -275,10 +279,13 @@ export class HttpLoadBalancer implements LoadBalancer {
   addTarget(target: LoadBalancerTarget): void {
     const internalTarget: InternalTarget = {
       ...target,
+      healthy: target.healthy ?? true,  // Default: new targets start healthy unless explicitly unhealthy
       requests: 0,
       errors: 0,
       totalResponseTime: 0,
       lastUsed: 0,
+      consecutiveFailures: 0,
+      consecutiveSuccesses: 0,
       weight: target.weight ?? 1,
       connections: target.connections ?? 0,
       averageResponseTime: target.averageResponseTime ?? 0,
@@ -746,20 +753,32 @@ export class HttpLoadBalancer implements LoadBalancer {
     return Math.abs(hash)
   }
 
+  /**
+   * Perform health checks with threshold-based state transitions.
+   * Uses consecutive failure/success counts to prevent flapping and
+   * enforces a minimum healthy target floor to prevent cascade failures.
+   */
   private async performHealthChecks(): Promise<void> {
     const healthCheckConfig = this.config.healthCheck
     if (!healthCheckConfig?.enabled) {
       return
     }
 
+    const failureThreshold = healthCheckConfig.failureThreshold ?? 3
+    const successThreshold = healthCheckConfig.successThreshold ?? 2
+    const minHealthyTargets = healthCheckConfig.minHealthyTargets ?? 1
+
     this.logger.debug('Starting health checks', {
       targetCount: this.targets.size,
       interval: healthCheckConfig.interval,
       timeout: healthCheckConfig.timeout,
+      failureThreshold,
+      successThreshold,
+      minHealthyTargets,
     })
 
     const promises = Array.from(this.targets.values()).map(
-      async (target: LoadBalancerTarget) => {
+      async (target: InternalTarget) => {
         const startTime = Date.now()
         try {
           const url = new URL(target.url)
@@ -786,10 +805,39 @@ export class HttpLoadBalancer implements LoadBalancer {
           if (isHealthy && healthCheckConfig.expectedBody) {
             const body = await response.text()
             const bodyMatches = body.includes(healthCheckConfig.expectedBody)
-            this.updateTargetHealth(target.url, bodyMatches)
+
+            if (bodyMatches) {
+              target.consecutiveSuccesses++
+              target.consecutiveFailures = 0
+            } else {
+              target.consecutiveFailures++
+              target.consecutiveSuccesses = 0
+            }
+
+            // Apply thresholds
+            if (target.consecutiveFailures >= failureThreshold) {
+              this.updateTargetHealthWithFloor(target.url, false, minHealthyTargets)
+            } else if (target.consecutiveSuccesses >= successThreshold) {
+              this.updateTargetHealth(target.url, true)
+            }
+
             this.logger.logHealthCheck(target.url, bodyMatches, duration)
           } else {
-            this.updateTargetHealth(target.url, isHealthy)
+            if (isHealthy) {
+              target.consecutiveSuccesses++
+              target.consecutiveFailures = 0
+            } else {
+              target.consecutiveFailures++
+              target.consecutiveSuccesses = 0
+            }
+
+            // Apply thresholds
+            if (target.consecutiveFailures >= failureThreshold) {
+              this.updateTargetHealthWithFloor(target.url, false, minHealthyTargets)
+            } else if (target.consecutiveSuccesses >= successThreshold) {
+              this.updateTargetHealth(target.url, true)
+            }
+
             this.logger.logHealthCheck(
               target.url,
               isHealthy,
@@ -798,8 +846,16 @@ export class HttpLoadBalancer implements LoadBalancer {
             )
           }
         } catch (error) {
+          target.consecutiveFailures++
+          target.consecutiveSuccesses = 0
+
           const duration = Date.now() - startTime
-          this.updateTargetHealth(target.url, false)
+
+          // Only mark unhealthy after threshold is met
+          if (target.consecutiveFailures >= failureThreshold) {
+            this.updateTargetHealthWithFloor(target.url, false, minHealthyTargets)
+          }
+
           this.logger.logHealthCheck(
             target.url,
             false,
@@ -811,6 +867,41 @@ export class HttpLoadBalancer implements LoadBalancer {
     )
 
     await Promise.allSettled(promises)
+  }
+
+  /**
+   * Update target health with minimum healthy target floor.
+   * Prevents cascade failures by ensuring at least minHealthy targets stay up.
+   */
+  private updateTargetHealthWithFloor(
+    url: string,
+    healthy: boolean,
+    minHealthyTargets: number,
+  ): void {
+    if (healthy) {
+      this.updateTargetHealth(url, true)
+      return
+    }
+
+    // Count how many targets would remain healthy if we mark this one unhealthy
+    let healthyCount = 0
+    for (const [targetUrl, target] of this.targets.entries()) {
+      if (targetUrl === url) continue
+      if (target.healthy) healthyCount++
+    }
+
+    // Only enforce floor if there are still healthy targets left.
+    // If all other targets are already unhealthy, let this one go too
+    // (a full outage is real, not a cascade to prevent).
+    if (healthyCount > 0 && healthyCount < minHealthyTargets) {
+      this.logger.warn(
+        `Not marking ${url} unhealthy: would leave only ${healthyCount} healthy targets (floor=${minHealthyTargets})`,
+        { url, healthyCount, minHealthyTargets },
+      )
+      return // Refuse to mark unhealthy — would violate the floor
+    }
+
+    this.updateTargetHealth(url, false)
   }
 
   private startSessionCleanup(): void {
