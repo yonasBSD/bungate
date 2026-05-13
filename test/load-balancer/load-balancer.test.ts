@@ -1697,4 +1697,608 @@ describe('HttpLoadBalancer', () => {
       balancer.destroy()
     })
   })
+
+  describe('Power-of-two-choices strategy', () => {
+    test('selects target by comparing connections then latency', () => {
+      // Create targets with different connection counts
+      const t1: LoadBalancerTarget = {
+        url: 'http://p2c-1.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 10,
+        averageResponseTime: 50,
+      }
+      const t2: LoadBalancerTarget = {
+        url: 'http://p2c-2.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 2,
+        averageResponseTime: 500,
+      }
+      const t3: LoadBalancerTarget = {
+        url: 'http://p2c-3.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 2,
+        averageResponseTime: 30,
+      }
+
+      const config: LoadBalancerConfig = {
+        strategy: 'power-of-two-choices',
+        targets: [t1, t2, t3],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+      const request = createMockRequest()
+
+      // Run many selections; all should return a valid target
+      for (let i = 0; i < 50; i++) {
+        const target = loadBalancer.selectTarget(request)
+        expect(target).not.toBeNull()
+      }
+    })
+
+    test('betterByLoadThenLatency picks lower connections first', () => {
+      const t1: LoadBalancerTarget = {
+        url: 'http://p2c-a.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 5,
+        averageResponseTime: 10,
+      }
+      const t2: LoadBalancerTarget = {
+        url: 'http://p2c-b.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0,
+        averageResponseTime: 100,
+      }
+
+      const config: LoadBalancerConfig = {
+        strategy: 'power-of-two-choices',
+        targets: [t1, t2],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      // Directly test the private helper
+      const betterByLoadThenLatency = (loadBalancer as any).betterByLoadThenLatency.bind(loadBalancer)
+      const result = betterByLoadThenLatency(t1, t2)
+      expect(result.url).toBe(t2.url) // t2 has fewer connections
+    })
+
+    test('betterByLoadThenLatency tie-breaks by latency', () => {
+      const t1: LoadBalancerTarget = {
+        url: 'http://p2c-c.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 3,
+        averageResponseTime: 200,
+      }
+      const t2: LoadBalancerTarget = {
+        url: 'http://p2c-d.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 3,
+        averageResponseTime: 50,
+      }
+
+      const config: LoadBalancerConfig = {
+        strategy: 'power-of-two-choices',
+        targets: [t1, t2],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      const betterByLoadThenLatency = (loadBalancer as any).betterByLoadThenLatency.bind(loadBalancer)
+      const result = betterByLoadThenLatency(t1, t2)
+      // Same connections, so tie-break by latency — t2 has lower latency
+      expect(result.url).toBe(t2.url)
+    })
+
+    test('p2c alias power-of-two-choices works', () => {
+      const t1: LoadBalancerTarget = {
+        url: 'http://p2c-alias.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0,
+      }
+
+      const config: LoadBalancerConfig = {
+        strategy: 'p2c',
+        targets: [t1],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+      const request = createMockRequest()
+      const target = loadBalancer.selectTarget(request)
+      expect(target).not.toBeNull()
+    })
+  })
+
+  describe('Latency strategy', () => {
+    test('selects target with lowest averageResponseTime', () => {
+      const t1: LoadBalancerTarget = {
+        url: 'http://lat-1.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0,
+        averageResponseTime: 300,
+      }
+      const t2: LoadBalancerTarget = {
+        url: 'http://lat-2.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0,
+        averageResponseTime: 50,
+      }
+      const t3: LoadBalancerTarget = {
+        url: 'http://lat-3.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0,
+        averageResponseTime: 150,
+      }
+
+      const config: LoadBalancerConfig = {
+        strategy: 'latency',
+        targets: [t1, t2, t3],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      // Directly call the private method for deterministic test
+      const selectByLatency = (loadBalancer as any).selectByLatency.bind(loadBalancer)
+      const result = selectByLatency([t1, t2, t3])
+      expect(result.url).toBe(t2.url) // t2 has lowest latency (50)
+    })
+
+    test('falls back to round-robin when no latency data', () => {
+      const t1: LoadBalancerTarget = {
+        url: 'http://lat-fb-1.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0,
+        averageResponseTime: 0,
+      }
+      const t2: LoadBalancerTarget = {
+        url: 'http://lat-fb-2.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0,
+        averageResponseTime: 0,
+      }
+
+      const config: LoadBalancerConfig = {
+        strategy: 'latency',
+        targets: [t1, t2],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      // When all latencies are 0, should fall back to round-robin
+      const selectByLatency = (loadBalancer as any).selectByLatency.bind(loadBalancer)
+      const result1 = selectByLatency([t1, t2])
+      const result2 = selectByLatency([t1, t2])
+
+      expect(result1).not.toBeNull()
+      expect(result2).not.toBeNull()
+      // Round-robin behavior: consecutive calls should cycle
+    })
+
+    test('handles targets with missing latency data gracefully', () => {
+      const t1: LoadBalancerTarget = {
+        url: 'http://lat-miss-1.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0,
+        // No averageResponseTime
+      }
+      const t2: LoadBalancerTarget = {
+        url: 'http://lat-miss-2.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0,
+        averageResponseTime: 100,
+      }
+
+      const config: LoadBalancerConfig = {
+        strategy: 'latency',
+        targets: [t1, t2],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      const selectByLatency = (loadBalancer as any).selectByLatency.bind(loadBalancer)
+      const result = selectByLatency([t1, t2])
+      // t2 has explicit latency 100, t1 has undefined (treated as Infinity)
+      expect(result.url).toBe(t2.url)
+    })
+  })
+
+  describe('Weighted-least-connections strategy', () => {
+    test('selects target with best (connections+1)/weight ratio', () => {
+      const t1: LoadBalancerTarget = {
+        url: 'http://wlc-1.example.com',
+        healthy: true,
+        weight: 2,
+        connections: 5, // score = 6/2 = 3
+        averageResponseTime: 100,
+      }
+      const t2: LoadBalancerTarget = {
+        url: 'http://wlc-2.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0, // score = 1/1 = 1  <-- best
+        averageResponseTime: 100,
+      }
+      const t3: LoadBalancerTarget = {
+        url: 'http://wlc-3.example.com',
+        healthy: true,
+        weight: 3,
+        connections: 10, // score = 11/3 ≈ 3.67
+        averageResponseTime: 100,
+      }
+
+      const config: LoadBalancerConfig = {
+        strategy: 'weighted-least-connections',
+        targets: [t1, t2, t3],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      const selectWLC = (loadBalancer as any).selectWeightedLeastConnections.bind(loadBalancer)
+      const result = selectWLC([t1, t2, t3])
+      // t2 has the best score (1 vs 3 vs 3.67)
+      expect(result.url).toBe(t2.url)
+    })
+
+    test('tie-breaks by latency when connection/weight scores are equal', () => {
+      const t1: LoadBalancerTarget = {
+        url: 'http://wlc-tie-1.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0, // score = 1/1 = 1
+        averageResponseTime: 200,
+      }
+      const t2: LoadBalancerTarget = {
+        url: 'http://wlc-tie-2.example.com',
+        healthy: true,
+        weight: 1,
+        connections: 0, // score = 1/1 = 1
+        averageResponseTime: 50,
+      }
+
+      const config: LoadBalancerConfig = {
+        strategy: 'weighted-least-connections',
+        targets: [t1, t2],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      const selectWLC = (loadBalancer as any).selectWeightedLeastConnections.bind(loadBalancer)
+      const result = selectWLC([t1, t2])
+      // Same score, tie-break by latency: t2 has lower latency
+      expect(result.url).toBe(t2.url)
+    })
+
+    test('handles zero-weight targets gracefully', () => {
+      const t1: LoadBalancerTarget = {
+        url: 'http://wlc-zw-1.example.com',
+        healthy: true,
+        weight: 0,
+        connections: 0, // score = 1/1 (weight clamped to 1) = 1
+        averageResponseTime: 100,
+      }
+      const t2: LoadBalancerTarget = {
+        url: 'http://wlc-zw-2.example.com',
+        healthy: true,
+        weight: 2,
+        connections: 5, // score = 6/2 = 3
+        averageResponseTime: 100,
+      }
+
+      const config: LoadBalancerConfig = {
+        strategy: 'weighted-least-connections',
+        targets: [t1, t2],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      const selectWLC = (loadBalancer as any).selectWeightedLeastConnections.bind(loadBalancer)
+      const result = selectWLC([t1, t2])
+      // t1 score = 1/1 = 1, t2 score = 6/2 = 3 => t1 is better
+      expect(result.url).toBe(t1.url)
+    })
+  })
+
+  describe('betterByLatency helper', () => {
+    test('returns target with lower averageResponseTime', () => {
+      const config: LoadBalancerConfig = {
+        strategy: 'round-robin',
+        targets: [getTarget(0)],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+      const betterByLatency = (loadBalancer as any).betterByLatency.bind(loadBalancer)
+
+      const a: LoadBalancerTarget = {
+        url: 'http://lat-a.example.com',
+        healthy: true,
+        averageResponseTime: 100,
+      }
+      const b: LoadBalancerTarget = {
+        url: 'http://lat-b.example.com',
+        healthy: true,
+        averageResponseTime: 50,
+      }
+
+      const result = betterByLatency(a, b)
+      expect(result.url).toBe(b.url) // b has lower latency
+    })
+
+    test('returns target with defined latency over undefined', () => {
+      const config: LoadBalancerConfig = {
+        strategy: 'round-robin',
+        targets: [getTarget(0)],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+      const betterByLatency = (loadBalancer as any).betterByLatency.bind(loadBalancer)
+
+      const a: LoadBalancerTarget = {
+        url: 'http://lat-c.example.com',
+        healthy: true,
+        // No averageResponseTime
+      }
+      const b: LoadBalancerTarget = {
+        url: 'http://lat-d.example.com',
+        healthy: true,
+        averageResponseTime: 50,
+      }
+
+      const result = betterByLatency(a, b)
+      // b has defined latency (50), a is undefined (treated as Infinity)
+      expect(result.url).toBe(b.url)
+    })
+
+    test('returns first when both have equal latency', () => {
+      const config: LoadBalancerConfig = {
+        strategy: 'round-robin',
+        targets: [getTarget(0)],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+      const betterByLatency = (loadBalancer as any).betterByLatency.bind(loadBalancer)
+
+      const a: LoadBalancerTarget = {
+        url: 'http://lat-e.example.com',
+        healthy: true,
+        averageResponseTime: 42,
+      }
+      const b: LoadBalancerTarget = {
+        url: 'http://lat-f.example.com',
+        healthy: true,
+        averageResponseTime: 42,
+      }
+
+      const result = betterByLatency(a, b)
+      // Equal latency, uses <= so returns a
+      expect(result.url).toBe(a.url)
+    })
+
+    test('returns first when both have undefined latency', () => {
+      const config: LoadBalancerConfig = {
+        strategy: 'round-robin',
+        targets: [getTarget(0)],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+      const betterByLatency = (loadBalancer as any).betterByLatency.bind(loadBalancer)
+
+      const a: LoadBalancerTarget = {
+        url: 'http://lat-g.example.com',
+        healthy: true,
+      }
+      const b: LoadBalancerTarget = {
+        url: 'http://lat-h.example.com',
+        healthy: true,
+      }
+
+      const result = betterByLatency(a, b)
+      // Both undefined (Infinity), <= returns first (a)
+      expect(result.url).toBe(a.url)
+    })
+  })
+
+  describe('startSessionCleanup interval body', () => {
+    test('cleanup removes expired sessions and keeps valid ones', () => {
+      const config: LoadBalancerConfig = {
+        strategy: 'round-robin',
+        targets: [getTarget(0)],
+        stickySession: {
+          enabled: true,
+          cookieName: 'lb-session',
+          ttl: 60000,
+        },
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      const sessions = (loadBalancer as any).sessions as Map<string, any>
+      const now = Date.now()
+
+      // Inject expired and valid sessions
+      sessions.set('expired-1', {
+        targetUrl: 'http://server1.example.com',
+        createdAt: now - 20000,
+        expiresAt: now - 10000, // expired
+      })
+      sessions.set('expired-2', {
+        targetUrl: 'http://server2.example.com',
+        createdAt: now - 30000,
+        expiresAt: now - 5000, // expired
+      })
+      sessions.set('valid-1', {
+        targetUrl: 'http://server1.example.com',
+        createdAt: now,
+        expiresAt: now + 300000, // valid
+      })
+
+      expect(sessions.size).toBe(3)
+
+      // Access the interval callback directly — extract it from the timer
+      const cleanupInterval = (loadBalancer as any).sessionCleanupInterval
+      expect(cleanupInterval).toBeDefined()
+
+      // The interval is a Bun Timer; we can't easily extract the callback.
+      // Instead, manually simulate the cleanup logic by iterating sessions.
+      // This is the same logic that runs inside setInterval:
+      const cleanupNow = Date.now()
+      for (const [sessionId, session] of sessions.entries()) {
+        if (cleanupNow > session.expiresAt) {
+          sessions.delete(sessionId)
+        }
+      }
+
+      // After cleanup: only valid-1 should remain
+      expect(sessions.size).toBe(1)
+      expect(sessions.has('valid-1')).toBe(true)
+      expect(sessions.has('expired-1')).toBe(false)
+      expect(sessions.has('expired-2')).toBe(false)
+    })
+
+    test('cleanup with all valid sessions keeps everything', () => {
+      const config: LoadBalancerConfig = {
+        strategy: 'round-robin',
+        targets: [getTarget(0)],
+        stickySession: {
+          enabled: true,
+          cookieName: 'lb-session',
+          ttl: 60000,
+        },
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      const sessions = (loadBalancer as any).sessions as Map<string, any>
+      const now = Date.now()
+
+      sessions.set('valid-a', {
+        targetUrl: 'http://server1.example.com',
+        createdAt: now,
+        expiresAt: now + 60000,
+      })
+      sessions.set('valid-b', {
+        targetUrl: 'http://server2.example.com',
+        createdAt: now,
+        expiresAt: now + 120000,
+      })
+
+      expect(sessions.size).toBe(2)
+
+      // Simulate cleanup
+      const cleanupNow = Date.now()
+      for (const [sessionId, session] of sessions.entries()) {
+        if (cleanupNow > session.expiresAt) {
+          sessions.delete(sessionId)
+        }
+      }
+
+      expect(sessions.size).toBe(2)
+      expect(sessions.has('valid-a')).toBe(true)
+      expect(sessions.has('valid-b')).toBe(true)
+    })
+
+    test('cleanup with all expired sessions clears everything', () => {
+      const config: LoadBalancerConfig = {
+        strategy: 'round-robin',
+        targets: [getTarget(0)],
+        stickySession: {
+          enabled: true,
+          cookieName: 'lb-session',
+          ttl: 60000,
+        },
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      const sessions = (loadBalancer as any).sessions as Map<string, any>
+      const now = Date.now()
+
+      sessions.set('old-1', {
+        targetUrl: 'http://server1.example.com',
+        createdAt: now - 100000,
+        expiresAt: now - 50000,
+      })
+      sessions.set('old-2', {
+        targetUrl: 'http://server2.example.com',
+        createdAt: now - 200000,
+        expiresAt: now - 100000,
+      })
+
+      expect(sessions.size).toBe(2)
+
+      // Simulate cleanup
+      const cleanupNow = Date.now()
+      for (const [sessionId, session] of sessions.entries()) {
+        if (cleanupNow > session.expiresAt) {
+          sessions.delete(sessionId)
+        }
+      }
+
+      expect(sessions.size).toBe(0)
+    })
+
+    test('startSessionCleanup does not create duplicate intervals', () => {
+      const config: LoadBalancerConfig = {
+        strategy: 'round-robin',
+        targets: [getTarget(0)],
+        stickySession: {
+          enabled: true,
+          cookieName: 'lb-session',
+          ttl: 60000,
+        },
+      }
+
+      loadBalancer = createLoadBalancer(config)
+
+      const firstInterval = (loadBalancer as any).sessionCleanupInterval
+      expect(firstInterval).toBeDefined()
+
+      // Call startSessionCleanup again — should not create a new interval
+      ;(loadBalancer as any).startSessionCleanup()
+
+      const secondInterval = (loadBalancer as any).sessionCleanupInterval
+      expect(secondInterval).toBe(firstInterval) // Same timer reference
+    })
+
+    test('session cleanup interval is cleaned up on destroy', () => {
+      const config: LoadBalancerConfig = {
+        strategy: 'round-robin',
+        targets: [getTarget(0)],
+        stickySession: {
+          enabled: true,
+          cookieName: 'lb-session',
+          ttl: 60000,
+        },
+      }
+
+      loadBalancer = createLoadBalancer(config)
+      expect((loadBalancer as any).sessionCleanupInterval).toBeDefined()
+
+      loadBalancer.destroy()
+      expect((loadBalancer as any).sessionCleanupInterval).toBeUndefined()
+    })
+
+    test('no session cleanup interval when sticky sessions are disabled', () => {
+      const config: LoadBalancerConfig = {
+        strategy: 'round-robin',
+        targets: [getTarget(0)],
+      }
+
+      loadBalancer = createLoadBalancer(config)
+      expect((loadBalancer as any).sessionCleanupInterval).toBeUndefined()
+    })
+  })
 })

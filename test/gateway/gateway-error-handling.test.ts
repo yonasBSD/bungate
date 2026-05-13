@@ -63,3 +63,5 @@ describe('BunGateway Error Handling', () => {
     expect(data.path).toBe('/non-existent')
   })
 })
+
+

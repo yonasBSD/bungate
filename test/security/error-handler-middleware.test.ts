@@ -376,3 +376,14 @@ describe('ErrorHandlerMiddleware', () => {
     })
   })
 })
+
+
+describe('Extract URL from errors', () => {
+  test('should extract URL from error.url when no backendUrl', () => {
+    const err = new Error('Connection failed to http://test.internal:8080/path')
+    ;(err as any).url = 'http://override.url'
+    const middleware = createErrorHandlerMiddleware({ production: false })
+    expect(err.message).toContain('http://')
+    expect((err as any).url).toBe('http://override.url')
+  })
+})

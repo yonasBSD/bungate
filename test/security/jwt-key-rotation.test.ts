@@ -545,4 +545,200 @@ describe('JWTKeyRotationManager', () => {
       expect(() => manager.destroy()).not.toThrow()
     })
   })
+
+  describe('refreshJWKS', () => {
+    test('should successfully refresh JWKS and update cache', async () => {
+      const logs: any[] = []
+      const logger = (message: string, meta?: any) => {
+        logs.push({ message, meta })
+      }
+
+      const config: JWTKeyConfig = {
+        secrets: [
+          {
+            key: 'test-secret',
+            algorithm: 'HS256',
+            primary: true,
+          },
+        ],
+        jwksUri: 'https://example.com/.well-known/jwks.json',
+        jwksRefreshInterval: 3600000,
+      }
+      manager = new JWTKeyRotationManager(config, logger)
+
+      // Access jwksCache before refresh — initialized by constructor
+      const initialCache = (manager as any).jwksCache
+      expect(initialCache).toBeDefined()
+      const initialLastRefresh = initialCache.lastRefresh
+
+      // Wait a tiny bit so timestamps differ
+      await new Promise((resolve) => setTimeout(resolve, 10))
+
+      await (manager as any).refreshJWKS()
+
+      const updatedCache = (manager as any).jwksCache
+      expect(updatedCache).toBeDefined()
+      expect(updatedCache.lastRefresh).toBeGreaterThan(initialLastRefresh)
+      expect(updatedCache.nextRefresh).toBeGreaterThan(updatedCache.lastRefresh)
+
+      // Verify success log
+      const successLog = logs.find(
+        (l) => l.message === 'JWKS refreshed successfully',
+      )
+      expect(successLog).toBeDefined()
+      expect(successLog.meta.uri).toBe(
+        'https://example.com/.well-known/jwks.json',
+      )
+      expect(successLog.meta.nextRefresh).toBeDefined()
+    })
+
+    test('should throw when JWKS URI is not configured', async () => {
+      const config: JWTKeyConfig = {
+        secrets: [
+          {
+            key: 'test-secret',
+            algorithm: 'HS256',
+            primary: true,
+          },
+        ],
+      }
+      manager = new JWTKeyRotationManager(config)
+
+      await expect((manager as any).refreshJWKS()).rejects.toThrow(
+        'JWKS URI not configured',
+      )
+    })
+
+    test('should catch error, log, and re-throw for invalid JWKS URI', async () => {
+      const logs: any[] = []
+      const logger = (message: string, meta?: any) => {
+        logs.push({ message, meta })
+      }
+
+      const config: JWTKeyConfig = {
+        secrets: [
+          {
+            key: 'test-secret',
+            algorithm: 'HS256',
+            primary: true,
+          },
+        ],
+        // Note: no jwksUri here so constructor won't initialize JWKS.
+        // We set it manually via (manager as any) for the test.
+      }
+      manager = new JWTKeyRotationManager(config, logger)
+
+      // Inject a bad JWKS URI that will cause new URL() to throw
+      ;(manager as any).config.jwksUri = 'not-a-valid-url'
+
+      // Clear logs from construction
+      logs.length = 0
+
+      await expect((manager as any).refreshJWKS()).rejects.toThrow()
+
+      // Verify error log was written
+      const errorLog = logs.find(
+        (l) => l.message === 'Failed to refresh JWKS',
+      )
+      expect(errorLog).toBeDefined()
+      expect(errorLog.meta.uri).toBe('not-a-valid-url')
+      expect(errorLog.meta.error).toBeDefined()
+    })
+  })
+
+  describe('startJWKSRefresh', () => {
+    test('should set up refresh timer when jwksUri and jwksRefreshInterval are configured', () => {
+      const config: JWTKeyConfig = {
+        secrets: [
+          {
+            key: 'test-secret',
+            algorithm: 'HS256',
+            primary: true,
+          },
+        ],
+        jwksUri: 'https://example.com/.well-known/jwks.json',
+        jwksRefreshInterval: 3600000,
+      }
+      manager = new JWTKeyRotationManager(config)
+
+      // Verify that an interval timer was created
+      const timer = (manager as any).refreshTimer
+      expect(timer).toBeDefined()
+    })
+
+    test('should not set up timer when jwksRefreshInterval is not configured', () => {
+      const config: JWTKeyConfig = {
+        secrets: [
+          {
+            key: 'test-secret',
+            algorithm: 'HS256',
+            primary: true,
+          },
+        ],
+        jwksUri: 'https://example.com/.well-known/jwks.json',
+        // no jwksRefreshInterval
+      }
+      manager = new JWTKeyRotationManager(config)
+
+      // startJWKSRefresh returns early if jwksRefreshInterval is missing
+      const timer = (manager as any).refreshTimer
+      expect(timer).toBeUndefined()
+    })
+
+    test('should not create timer when jwksUri is not set', () => {
+      const config: JWTKeyConfig = {
+        secrets: [
+          {
+            key: 'test-secret',
+            algorithm: 'HS256',
+            primary: true,
+          },
+        ],
+        // no jwksUri
+      }
+      manager = new JWTKeyRotationManager(config)
+
+      const timer = (manager as any).refreshTimer
+      expect(timer).toBeUndefined()
+    })
+
+    test('timer callback invokes refreshJWKS and updates cache', async () => {
+      const logs: any[] = []
+      const logger = (message: string, meta?: any) => {
+        logs.push({ message, meta })
+      }
+
+      const config: JWTKeyConfig = {
+        secrets: [
+          {
+            key: 'test-secret',
+            algorithm: 'HS256',
+            primary: true,
+          },
+        ],
+        jwksUri: 'https://example.com/.well-known/jwks.json',
+        jwksRefreshInterval: 50, // short interval for fast test
+      }
+      manager = new JWTKeyRotationManager(config, logger)
+
+      // Record initial cache state
+      const initialCache = (manager as any).jwksCache
+      expect(initialCache).toBeDefined()
+      const initialLastRefresh = initialCache.lastRefresh
+
+      // Wait for the interval to fire at least once
+      await new Promise((resolve) => setTimeout(resolve, 120))
+
+      const updatedCache = (manager as any).jwksCache
+      expect(updatedCache).toBeDefined()
+      // Cache should have been refreshed by the timer callback
+      expect(updatedCache.lastRefresh).toBeGreaterThan(initialLastRefresh)
+
+      // Verify refresh success was logged by the callback
+      const successLogs = logs.filter(
+        (l) => l.message === 'JWKS refreshed successfully',
+      )
+      expect(successLogs.length).toBeGreaterThan(0)
+    })
+  })
 })
