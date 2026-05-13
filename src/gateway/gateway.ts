@@ -70,6 +70,7 @@ import {
   TrustedProxyValidator,
   createTrustedProxyValidator,
 } from '../security/trusted-proxy'
+import { createErrorHandlerMiddleware } from '../security/error-handler-middleware'
 
 /**
  * Production-grade API Gateway implementation
@@ -151,12 +152,35 @@ export class BunGateway implements Gateway {
     }
 
     // Create 0http-bun router with configuration
+    // Build a proper global error handler from user config (or use secure defaults)
+    const errorHandlerFn =
+      typeof config.errorHandler === 'function'
+        ? // User provided a custom error handler function — use it directly
+          config.errorHandler
+        : // Default: log the error, return safe 500 without leaking internals
+          (err: Error, req?: any) => {
+            this.config.logger?.error({
+              error: err.message,
+              stack: err.stack,
+              url: req?.url,
+              method: req?.method,
+            }, 'Unhandled gateway error')
+
+            return new Response(
+              JSON.stringify({ error: 'Internal server error' }),
+              {
+                status: 500,
+                headers: { 'content-type': 'application/json' },
+              },
+            )
+          }
+
     const routerConfig: IRouterConfig = {
       // Map gateway config to router config
       defaultRoute: config.defaultRoute
         ? (req: ZeroRequest) => config.defaultRoute!(req)
         : undefined,
-      errorHandler: config.errorHandler,
+      errorHandler: errorHandlerFn,
       port: config.server?.port,
     }
 
