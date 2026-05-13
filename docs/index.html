@@ -272,7 +272,7 @@ gateway.<span class="fn">addRoute</span>({ pattern: <span class="str">'/payments
       { url: <span class="str">'http://api3:3000'</span>, weight: <span class="num">1</span> },
     ],
     healthCheck: { enabled: <span class="kw">true</span>, interval: <span class="num">15000</span>, path: <span class="str">'/health'</span> },
-    stickySessions: { enabled: <span class="kw">true</span> },
+    stickySession: { enabled: <span class="kw">true</span> },
   },
 })</div>
             </div>
@@ -313,7 +313,7 @@ gateway.<span class="fn">addRoute</span>({ pattern: <span class="str">'/payments
   },
 })
 <span class="cmt">// Scale at runtime: kill -s SIGUSR2 &lt;pid&gt; → rolling restart</span>
-<span class="cmt">// Increase workers: gateway.cluster.scale(12)</span></div>
+<span class="cmt">// Increase workers: gateway.cluster.scaleTo(12)</span></div>
             </div>
           </div>
           <div class="use-slide">
