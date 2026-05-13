@@ -253,8 +253,16 @@
   auth: { secret: process.env.<span class="fn">JWT_SECRET</span> },
   cors: { origin: [<span class="str">'https://myapp.com'</span>] },
 })
-gateway.<span class="fn">addRoute</span>({ pattern: <span class="str">'/users/*'</span>, target: <span class="str">'http://user-svc:3001'</span>, rateLimit: { max: <span class="num">100</span>, windowMs: <span class="num">60000</span> } })
-gateway.<span class="fn">addRoute</span>({ pattern: <span class="str">'/payments/*'</span>, target: <span class="str">'http://pay-svc:3002'</span>, circuitBreaker: { enabled: <span class="kw">true</span>, failureThreshold: <span class="num">3</span> } })</div>
+gateway.<span class="fn">addRoute</span>({
+  pattern: <span class="str">'/users/*'</span>,
+  target: <span class="str">'http://user-svc:3001'</span>,
+  rateLimit: { max: <span class="num">100</span>, windowMs: <span class="num">60000</span> },
+})
+gateway.<span class="fn">addRoute</span>({
+  pattern: <span class="str">'/payments/*'</span>,
+  target: <span class="str">'http://pay-svc:3002'</span>,
+  circuitBreaker: { enabled: <span class="kw">true</span>, failureThreshold: <span class="num">3</span> },
+})</div>
             </div>
           </div>
           <div class="use-slide">
