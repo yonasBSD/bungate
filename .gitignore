@@ -144,3 +144,5 @@ results/
 .vscode/
 
 .plan.md
+
+sec-findings.md
